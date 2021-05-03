@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NadekoBot.Core", "NadekoBot
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nadeko.Tests", "Nadeko.Tests\Nadeko.Tests.csproj", "{269AB023-89AE-4588-BAC0-1BE12A205880}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nadeko.Calc", "src\Nadeko.Calc\Nadeko.Calc.csproj", "{1DFE7005-E1AD-4252-9141-DEE8978916EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,12 @@ Global
 		{269AB023-89AE-4588-BAC0-1BE12A205880}.GlobalNadeko|Any CPU.Build.0 = Debug|Any CPU
 		{269AB023-89AE-4588-BAC0-1BE12A205880}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{269AB023-89AE-4588-BAC0-1BE12A205880}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1DFE7005-E1AD-4252-9141-DEE8978916EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DFE7005-E1AD-4252-9141-DEE8978916EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1DFE7005-E1AD-4252-9141-DEE8978916EB}.GlobalNadeko|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DFE7005-E1AD-4252-9141-DEE8978916EB}.GlobalNadeko|Any CPU.Build.0 = Debug|Any CPU
+		{1DFE7005-E1AD-4252-9141-DEE8978916EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1DFE7005-E1AD-4252-9141-DEE8978916EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -52,6 +60,7 @@ Global
 		{45EC1473-C678-4857-A544-07DFE0D0B478} = {04929013-5BAB-42B0-B9B2-8F2BB8F16AF2}
 		{A6CCEFBD-DCF2-482C-9643-47664683548F} = {04929013-5BAB-42B0-B9B2-8F2BB8F16AF2}
 		{269AB023-89AE-4588-BAC0-1BE12A205880} = {04929013-5BAB-42B0-B9B2-8F2BB8F16AF2}
+		{1DFE7005-E1AD-4252-9141-DEE8978916EB} = {04929013-5BAB-42B0-B9B2-8F2BB8F16AF2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F3F555C-855F-4BE8-B526-D062D3E8ACA4}
