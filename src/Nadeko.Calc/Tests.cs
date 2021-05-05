@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using Nadeko.Calc.Expressions;
 using Nadeko.Calc.Tokens;
 using NUnit.Framework;
 
@@ -59,7 +61,7 @@ namespace Nadeko.Calc
         {
             var left = new ValueExpression(5);
             var right = new ValueExpression(2);
-            var add = new MultiplicationBinaryExpression(left, right);
+            var add = new MultiplyBinaryExpression(left, right);
             var result = _eval.Evaluate(add);
             
             Assert.AreEqual(10, result.Value);
@@ -181,17 +183,17 @@ namespace Nadeko.Calc
         }
 
         [Test]
-        public void TestInvalidLexer()
+        public void TestLexerImplicitMultiplication()
         {
-            var lexer = new Lexer("123a");
+            var lexer = new Lexer("123abc");
             var result = lexer.Lex();
             
-            Assert.IsNotNull(result.Error);
+            Assert.IsNull(result.Error, result.Error);
             TestContext.Out.WriteLine(result.Error);
-            Assert.AreEqual(1, result.Tokens.Count());
+            Assert.AreEqual(4, result.Tokens.Count());
             Assert.IsInstanceOf<NumberToken>(result.Tokens.First());
         }
-
+        
         [Test]
         public void TestFullEvalAdditionSubtraction()
         {
@@ -305,13 +307,130 @@ namespace Nadeko.Calc
         }
 
         [Test]
+        public void TestConstants()
+        {
+            var (succ, err) = _eval.TryEvaluate("pi", out var result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(Math.PI, result);
+            
+            (succ, err) = _eval.TryEvaluate("pi * e", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(Math.PI * Math.E, result);
+            
+            (succ, err) = _eval.TryEvaluate("3pi + 2e - 6", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(3 * Math.PI + 2 * Math.E - 6, result);
+        }
+        
+        [Test]
+        public void TestFunctions()
+        {
+            var (succ, err) = _eval.TryEvaluate("abs(-5) + abs(3) * 3", out var result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(14, result);
+            
+            (succ, err) = _eval.TryEvaluate("abs(  -  pi) * (e + 1   )", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(Math.Abs(Math.PI) * (Math.E + 1), result);
+            
+            (succ, err) = _eval.TryEvaluate("3abs(pi + 2e) - 6", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(3 * Math.Abs(Math.PI + 2 * Math.E) - 6, result);
+            
+            (succ, err) = _eval.TryEvaluate("round(3.4) + round(3.5) + round(3.6)", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(11, result);
+            
+            (succ, err) = _eval.TryEvaluate("ceil(3.4) + sign(-531) * sin(90)", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(3, result);
+            
+            (succ, err) = _eval.TryEvaluate("abs((sin(33) / cos(33)) - tan(33))", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.Less(result, 0.000000001);
+        }
+        
+        [Test]
+        public void TestShifts()
+        {
+            var (succ, err) = _eval.TryEvaluate("1 + 123456 << 2", out var result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(493828, result);
+            
+            (succ, err) = _eval.TryEvaluate("153 << 2 >> 1", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(306, result);
+            
+            (succ, err) = _eval.TryEvaluate("153 << 100", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(10514079940608, result);
+            
+            (succ, err) = _eval.TryEvaluate("153 >> 100", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(0, result);
+        }
+        
+        [Test]
+        public void TestBitwise()
+        {
+            var (succ, err) = _eval.TryEvaluate("1234 | 547 << 2", out var result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(3294, result);
+            
+            (succ, err) = _eval.TryEvaluate("2 * 1234 & 547 << 2", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(2180, result);
+            
+            (succ, err) = _eval.TryEvaluate("547 << 1 xor 4444 / 4", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(17, result);
+            
+            (succ, err) = _eval.TryEvaluate("1 | 2 xor 3", out result);
+                        
+            Assert.IsNull(err, err);
+            Assert.IsTrue(succ);
+            Assert.AreEqual(0, result);
+        }
+
+        [Test]
         public void Lulz()
         {
-            var (succ, err) = _eval.TryEvaluate("5 -- 3", out var result);
+            var (succ, err) = _eval.TryEvaluate("2pi-3", out var result);
             
             TestContext.WriteLine(err);
             TestContext.WriteLine($"Result: {result}");
-            
         }
     }
 }

@@ -4,4 +4,14 @@
     {
         
     }
+
+    public sealed class OpenBracketToken : Token
+    {
+        
+    }
+
+    public sealed class ClosedBracketToken : Token
+    {
+        
+    }
 }

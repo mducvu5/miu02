@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nadeko.Calc.Expressions;
 using Nadeko.Calc.Tokens;
 
 namespace Nadeko.Calc
@@ -9,8 +10,20 @@ namespace Nadeko.Calc
     {
         private readonly IReadOnlyList<Token> _tokens;
         private int current = 0;
+        private readonly List<List<Type>> _binaryOperators;
 
-        public Parser(string input)
+        private Parser()
+        {
+            _binaryOperators = new List<List<Type>>()
+            {
+                new List<Type>() { typeof(LogicalAndToken), typeof(LogicalOrToken), typeof(LogicalXorToken)},
+                new List<Type>() { typeof(LeftShiftToken), typeof(RightShiftToken)},
+                new List<Type>() { typeof(PlusToken), typeof(MinusToken)},
+                new List<Type>() { typeof(MultiplyToken), typeof(DivideToken)},
+                new List<Type>() { typeof(PowerToken)},
+            };
+        }
+        public Parser(string input) : this()
         {
             var lexer = new Lexer(input);
             var lexerResult = lexer.Lex();
@@ -20,65 +33,46 @@ namespace Nadeko.Calc
             _tokens = lexerResult.Tokens.ToList();
         }
         
-        public Parser(IEnumerable<Token> tokens)
+        public Parser(IEnumerable<Token> tokens) : this()
         {
             _tokens = tokens.ToList();
         }
+
+        private IReadOnlyList<Type> BinaryOperatorsFor(int precedence = 0)
+            => precedence >= _binaryOperators.Count
+                ? Enumerable.Empty<Type>().ToList()
+                : _binaryOperators[precedence];
         
         public (Expression expression, string error) Parse()
         {
-            var expr = ParseExpression1();
-            if (expr is null)
+            var expr = ParseExpression();
+            
+            if (!(Peek() is EndOfFileToken) || expr is null)
                 return (null, $"Unexpected {Peek(0).GetType().Name}, token #{current}");
+            
             return (expr, null);
         }
 
-        private Expression ParseExpression1()
+        private Expression ParseExpression(int precedence = 0)
         {
-            var left = ParseExpression2();
+            var binaryOperators = BinaryOperatorsFor(precedence);
+
+            if (!binaryOperators.Any())
+            {
+                return ParseValue();
+            }
+
+            var left = ParseExpression(precedence + 1);
             if (left is null)
                 return null;
-            while (Peek(0) is PlusToken || Peek(0) is MinusToken)
+            
+            while (binaryOperators.Contains(Peek(0).GetType()))
             {
-                var token = GetNext();
-                var right = ParseExpression2();
+                var token = Consume();
+                var right = ParseExpression(precedence + 1);
                 if (right is null)
                     return null;
                 left = CreateBinaryExpression(left, right, token);
-            }
-
-            return left;
-        }
-        
-        private Expression ParseExpression2()
-        {
-            var left = ParseExpression3();
-            if (left is null)
-                return null;
-            while (Peek(0) is MultiplyToken || Peek(0) is DivideToken)
-            {
-                var token = GetNext();
-                var right = ParseExpression3();
-                if (right is null)
-                    return null;
-                left = CreateBinaryExpression(left, right, token);
-            }
-
-            return left;
-        }
-        
-        private Expression ParseExpression3()
-        {
-            var left = ParseValue();
-            if (left is null)
-                return null;
-            while (Peek(0) is PowerToken)
-            {
-                GetNext();
-                var right = ParseValue();
-                if (right is null)
-                    return null;
-                left = new PowerBinaryExpression(left, right);
             }
 
             return left;
@@ -88,24 +82,53 @@ namespace Nadeko.Calc
         {
             while (true)
             {
-                var token = GetNext();
-                
-                if (token is PlusToken)
-                    continue;
-                
-                if (token is MinusToken)
+                var token = Consume();
+
+                switch (token)
                 {
-                    var value = ParseValue();
-                    if (value is null)
-                        return null;
+                    case OpenBracketToken _:
+                    {
+                        var expression = ParseExpression();
+                        if (expression is null)
+                            return null;
+
+                        token = Consume();
+                        if (token is ClosedBracketToken)
+                            return new BracketExpression(expression);
                     
-                    return new MinusUnaryExpression(value);
+                        // unmatched closing bracket?!
+                        return null;
+                    }
+                    case PlusToken _:
+                        continue;
+                    case MinusToken _:
+                    {
+                        var value = ParseValue();
+                        if (value is null)
+                            return null;
+                    
+                        return new MinusUnaryExpression(value);
+                    }
+                    case NumberToken nt:
+                        return new ValueExpression(nt.Value);
+                    case NameToken nameToken:
+                        if (Peek() is OpenBracketToken)
+                        {
+                            Consume();
+                            var expression = ParseExpression();
+
+                            token = Consume();
+                            if (token is ClosedBracketToken)
+                                return new FunctionExpression(nameToken.Name, expression);
+
+                            // Function call with unmatched closing bracket?!
+                            return null;
+                        }
+                        
+                        return new ConstantExpression(nameToken.Name);
+                    default:
+                        return null;
                 }
-
-                if (token is NumberToken nt)
-                    return new ValueExpression(nt.Value);
-
-                return null;
             }
         }
 
@@ -113,10 +136,15 @@ namespace Nadeko.Calc
             => token switch
             {
                 DivideToken _ => new DivisionBinaryExpression(left, right),
-                MultiplyToken _ => new MultiplicationBinaryExpression(left, right),
+                MultiplyToken _ => new MultiplyBinaryExpression(left, right),
                 PlusToken _ => new PlusBinaryExpression(left, right),
                 MinusToken _ => new MinusBinaryExpression(left, right),
                 PowerToken _ => new PowerBinaryExpression(left, right),
+                LeftShiftToken _ => new LeftShiftExpression(left, right),
+                RightShiftToken _ => new RightShiftExpression(left, right),
+                LogicalAndToken _ => new LogicalAndExpression(left, right),
+                LogicalOrToken _ => new LogicalOrExpression(left, right),
+                LogicalXorToken _ => new LogicalXorExpression(left, right),
                 _ => throw new ArgumentOutOfRangeException(nameof(token))
             };
 
@@ -128,7 +156,7 @@ namespace Nadeko.Calc
             return _tokens[current + offset];
         }
 
-        private Token GetNext()
+        private Token Consume()
         {
             return _tokens[current++];
         }

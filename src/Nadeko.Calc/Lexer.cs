@@ -1,14 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Nadeko.Calc.Tokens;
 
 namespace Nadeko.Calc
 {
+    public class Constant
+    {
+        public Constant(double value, params string[] nameses)
+        {
+            Names = nameses;
+            Value = value;
+        }
+
+        public string[] Names { get; }
+        public double Value { get; }
+    }
+
     public class Lexer
     {
         private readonly string _input;
-        private int _position = 0;
+        private int _position = 0; 
 
         public Lexer(string input)
         {
@@ -34,6 +46,7 @@ namespace Nadeko.Calc
         public LexResult Lex()
         {
             var tokens = new List<Token>();
+            var openCount = 0;
             while (true)
             {
                 var maybeChar = GetNext();
@@ -43,208 +56,130 @@ namespace Nadeko.Calc
                 if (char.IsWhiteSpace(c))
                     continue;
 
-                var startPos = _position;
-                if (char.IsDigit(c) || c == '.')
+                if (char.IsLetter(c))
                 {
-                    startPos -= 1;
-                    while (Peek() is char ch && (char.IsDigit(ch) || ch == '.'))
+                    
+                    var startPos = _position - 1;
+                    while (Peek() is char ch && (char.IsLetter(ch) || ch == '.'))
                     {
                         GetNext();
                     }
-                }
-
-                if (startPos != _position)
-                {
-                    var numberStr = _input.Substring(startPos, _position - startPos);
-                    if (!double.TryParse(numberStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var val))
+                
+                    if (startPos != _position)
                     {
-                        return new LexResult(tokens, $"Invalid number '{numberStr}' at position {startPos}");
+                        var name = _input.Substring(startPos, _position - startPos);
+                        if(name.ToLowerInvariant() == "xor")
+                            tokens.Add(new LogicalXorToken());
+                        else
+                        {
+                            // if previous token is number token
+                            // we can inject a multiply token in here
+                            // to simulate 2pi => 2*pi
+                            if (tokens.LastOrDefault() is NumberToken)
+                                tokens.Add(new MultiplyToken());
+                                    
+                            tokens.Add(new NameToken(name));
+                        }
+
+                        continue;
                     }
-                    
-                    tokens.Add(new NumberToken(val));
-                    continue;
                 }
 
-                // if (char.IsLetter(c))
-                // {
-                //     ParseWord();
-                // }
-
-                if(c == '+')
-                    tokens.Add(new PlusToken());
-                else if (c == '-')
-                    tokens.Add(new MinusToken());
-                else if (c == '/')
-                    tokens.Add(new DivideToken());
-                else if (c == '*')
-                    tokens.Add(new MultiplyToken());
-                else if (c == '^')
-                    tokens.Add(new PowerToken());
-                else
+                switch (c)
                 {
-                    return new LexResult(tokens, $"Invalid token '{c}' at position {_position}");
+                    case '0': case '1': case '3': case '4':
+                    case '5': case '6': case '7': case '8':
+                    case '9': case '.': case '2':
+                        var startPos = _position - 1;
+                        while (Peek() is char ch && (char.IsDigit(ch) || ch == '.'))
+                        {
+                            GetNext();
+                        }
+                    
+                        var numberStr = _input.Substring(startPos, _position - startPos);
+                        if (!double.TryParse(numberStr, NumberStyles.Any, CultureInfo.InvariantCulture, out var val))
+                        {
+                            return new LexResult(tokens, $"Invalid number '{numberStr}' at position {startPos}");
+                        }
+                
+                        tokens.Add(new NumberToken(val));
+                        break;
+                    case '+':
+                        tokens.Add(new PlusToken());
+                        break;
+                    case '-':
+                        tokens.Add(new MinusToken());
+                        break;
+                    case '/':
+                        tokens.Add(new DivideToken());
+                        break;
+                    case '*':
+                        tokens.Add(new MultiplyToken());
+                        break;
+                    case '^':
+                        tokens.Add(new PowerToken());
+                        break;
+                    case '&':
+                        tokens.Add(new LogicalAndToken());
+                        break;
+                    case '|':
+                        tokens.Add(new LogicalOrToken());
+                        break;
+                    case '(':
+                        tokens.Add(new OpenBracketToken());
+                        ++openCount;
+                        break;
+                    case ')' when --openCount < 0:
+                        return new LexResult
+                        (
+                            tokens, 
+                            $"Closed bracket token '{c}' at position {_position} doesn't have a matching open bracket."
+                        );
+                    case ')':
+                        tokens.Add(new ClosedBracketToken());
+                        break;
+                    case '<':
+                    {
+                        var next = GetNext();
+                        if (next is '<')
+                        {
+                            tokens.Add(new LeftShiftToken());
+                        }
+                        else
+                        {
+                            return new LexResult(tokens,
+                                $"Invalid token '<' at position {_position}. Did you mean '<<' ?");
+                        }
+
+                        break;
+                    }
+                    case '>':
+                    {
+                        var next = GetNext();
+                        if (next is '>')
+                        {
+                            tokens.Add(new RightShiftToken());
+                        }
+                        else
+                        {
+                            return new LexResult(tokens,
+                                $"Invalid token '>' at position {_position}. Did you mean '>>' ?");
+                        }
+
+                        break;
+                    }
+                    default:
+                        return new LexResult(tokens, $"Invalid token '{c}' at position {_position}");
                 }
             }
 
             tokens.Add(new EndOfFileToken());
-            return new LexResult(tokens);
-        }
-    }
-
-    public abstract class Expression
-    {
-    }
-
-    public sealed class ValueExpression : Expression
-    {
-        public ValueExpression(double value)
-        {
-            Value = value;
-        }
-
-        public double Value { get; }
-    }
-
-    public abstract class UnaryExpression : Expression
-    {
-        public Expression Expression { get; }
-
-        public UnaryExpression(Expression expression)
-        {
-            Expression = expression;
-        }
-    }
-
-    public sealed class MinusUnaryExpression : UnaryExpression
-    {
-        public MinusUnaryExpression(Expression expression) : base(expression)
-        {
-        }
-    }
-
-    public sealed class PlusUnaryExpression : UnaryExpression
-    {
-        public PlusUnaryExpression(Expression expression) : base(expression)
-        {
-        }
-    }
-
-    public abstract class BinaryExpression : Expression
-    {
-        public Expression Left { get; }
-        public Expression Right { get; }
-
-        public BinaryExpression(Expression left, Expression right)
-        {
-            Left = left;
-            Right = right;
-        }
-    }
-
-    public sealed class PlusBinaryExpression : BinaryExpression
-    {
-        public PlusBinaryExpression(Expression left, Expression right) : base(left, right)
-        {
-        }
-    }
-
-    public sealed class MinusBinaryExpression : BinaryExpression
-    {
-        public MinusBinaryExpression(Expression left, Expression right) : base(left, right)
-        {
-        }
-    }
-
-    public sealed class DivisionBinaryExpression : BinaryExpression
-    {
-        public DivisionBinaryExpression(Expression left, Expression right) : base(left, right)
-        {
-        }
-    }
-    
-    public sealed class MultiplicationBinaryExpression : BinaryExpression
-    {
-        public MultiplicationBinaryExpression(Expression left, Expression right) : base(left, right)
-        {
-        }
-    }
-    
-    public sealed class PowerBinaryExpression : BinaryExpression
-    {
-        public PowerBinaryExpression(Expression left, Expression right) : base(left, right)
-        {
-        }
-    }
-
-    public sealed class Evaluator
-    {
-        public (bool Success, string Error) TryEvaluate(string input, out double result)
-        {
-            result = 0;
-            
-            // lex
-            var lexer = new Lexer(input);
-            var lexerResult = lexer.Lex();
-            if (lexerResult.Error != null)
+            if (openCount > 0)
             {
-                return (false, lexerResult.Error);
+                return new LexResult(tokens, "Not all open brackets have matching closed brackets.");
             }
             
-            // parse
-            var parser = new Parser(input);
-            var (expr, error) = parser.Parse();
-            if (!(error is null))
-                return (false, error);
-            
-            var evalResult = Evaluate(expr);
-            result = evalResult.Value;
-            return (true, null);
+            return new LexResult(tokens);
         }
-        
-        public ValueExpression Evaluate(Expression expr)
-            => expr switch
-            {
-                ValueExpression vex => vex,
-                UnaryExpression uex => EvaluateUnaryExpression(uex),
-                BinaryExpression bex => EvaluateBinaryExpression(bex),
-                _ => throw new ArgumentOutOfRangeException(nameof(expr))
-            };
-
-        private ValueExpression EvaluateUnaryExpression(UnaryExpression uex)
-            => uex switch
-            {
-                PlusUnaryExpression mux => Evaluate(mux.Expression),
-                MinusUnaryExpression pux => Negate(Evaluate(pux.Expression)),
-                _ => throw new ArgumentOutOfRangeException(nameof(uex))
-            };
-
-        private ValueExpression EvaluateBinaryExpression(BinaryExpression bex)
-            => bex switch
-            {
-                DivisionBinaryExpression ex => Divide(Evaluate(ex.Left), Evaluate(ex.Right)),
-                MinusBinaryExpression ex => Subtract(Evaluate(ex.Left), Evaluate(ex.Right)),
-                MultiplicationBinaryExpression ex => Multiply(Evaluate(ex.Left), Evaluate(ex.Right)),
-                PlusBinaryExpression ex => Add(Evaluate(ex.Left), Evaluate(ex.Right)),
-                PowerBinaryExpression ex => Power(Evaluate(ex.Left), Evaluate(ex.Right)),
-                _ => throw new ArgumentOutOfRangeException(nameof(bex))
-            };
-        
-        private ValueExpression Power(ValueExpression left, ValueExpression right)
-            => new ValueExpression(Math.Pow(left.Value, right.Value));
-
-        private ValueExpression Divide(ValueExpression left, ValueExpression right)
-            => new ValueExpression(left.Value / right.Value);
-
-        private ValueExpression Subtract(ValueExpression left, ValueExpression right)
-            => new ValueExpression(left.Value - right.Value);
-
-        private ValueExpression Multiply(ValueExpression left, ValueExpression right)
-            => new ValueExpression(left.Value * right.Value);
-
-        private ValueExpression Add(ValueExpression left, ValueExpression right)
-            => new ValueExpression(left.Value + right.Value);
-
-        private ValueExpression Negate(ValueExpression ex)
-            => new ValueExpression(-ex.Value);
     }
 }
