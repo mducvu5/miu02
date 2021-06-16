@@ -12,12 +12,5 @@ namespace Nadeko.Calc
             "gamma", "γ");
         public static Constant Phi { get; } = new Constant(1.618_033_988_749_894_848_204_586, 
             "phi", "fi", "Φ", "φ");
-
-        public static IReadOnlyDictionary<string, Constant> Dictionary = new Constant[]
-            {
-                Pi, E, Phi, Gamma
-            }
-            .SelectMany(constant => constant.Names.Select(name => (name, constant)))
-            .ToDictionary(x => x.name, x => x.constant);
     }
 }

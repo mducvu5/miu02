@@ -2,9 +2,11 @@
 using NadekoBot.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Nadeko.Calc;
 using NadekoBot.Common.Attributes;
 
 namespace NadekoBot.Modules.Utility
@@ -14,48 +16,26 @@ namespace NadekoBot.Modules.Utility
         [Group]
         public class CalcCommands : NadekoSubmodule
         {
+            private static readonly Evaluator _calc = new Evaluator();
+            
             [NadekoCommand, Usage, Description, Aliases]
             public async Task Calculate([Leftover] string expression)
             {
-                var expr = new NCalc.Expression(expression, NCalc.EvaluateOptions.IgnoreCase | NCalc.EvaluateOptions.NoCache);
-                expr.EvaluateParameter += Expr_EvaluateParameter;
-                var result = expr.Evaluate();
-                if (!expr.HasErrors())
-                    await ctx.Channel.SendConfirmAsync("⚙ " + GetText("result"), result.ToString()).ConfigureAwait(false);
+                var (succ, err) = _calc.TryEvaluate(expression, out var result);
+                if (succ)
+                    await ctx.Channel.SendConfirmAsync("⚙ " + GetText("result"), result.ToString(CultureInfo.InvariantCulture));
                 else
-                    await ctx.Channel.SendErrorAsync("⚙ " + GetText("error"), expr.Error).ConfigureAwait(false);
-            }
-
-            private static void Expr_EvaluateParameter(string name, NCalc.ParameterArgs args)
-            {
-                switch (name.ToLowerInvariant())
-                {
-                    case "pi":
-                        args.Result = Math.PI;
-                        break;
-                    case "e":
-                        args.Result = Math.E;
-                        break;
-                    default:
-                        break;
-                }
+                    await ctx.Channel.SendErrorAsync("⚙ " + GetText("error"), err);
             }
 
             [NadekoCommand, Usage, Description, Aliases]
             public async Task CalcOps()
             {
-                var selection = typeof(Math).GetTypeInfo()
-                    .GetMethods()
-                    .Distinct(new MethodInfoEqualityComparer())
-                    .Select(x => x.Name)
-                    .Except(new[]
-                    {
-                        "ToString",
-                        "Equals",
-                        "GetHashCode",
-                        "GetType"
-                    });
-                await ctx.Channel.SendConfirmAsync(GetText("calcops", Prefix), string.Join(", ", selection)).ConfigureAwait(false);
+                var funcs = _calc.GetFunctions()
+                    .Select(x => x.Key)
+                    .JoinWith(", ");
+                
+                await ctx.Channel.SendConfirmAsync(GetText("calcops", Prefix), funcs);
             }
         }
 
