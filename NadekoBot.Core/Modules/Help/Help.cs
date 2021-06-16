@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.Commands;
 using NadekoBot.Common;
 using NadekoBot.Common.Attributes;
@@ -14,20 +14,25 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Discord.WebSocket;
+using NadekoBot.Core.Common.Attributes;
+using NadekoBot.Core.Services.Impl;
+using Serilog;
 
 namespace NadekoBot.Modules.Help
 {
-    public class Help : NadekoTopLevelModule<HelpService>
+    public class Help : NadekoModule<HelpService>
     {
         public const string PatreonUrl = "https://patreon.com/nadekobot";
         public const string PaypalUrl = "https://paypal.me/Kwoth";
         private readonly CommandService _cmds;
-        private readonly BotSettingsService _bss;
+        private readonly BotConfigService _bss;
         private readonly GlobalPermissionService _perms;
         private readonly IServiceProvider _services;
         private readonly DiscordSocketClient _client;
@@ -35,7 +40,7 @@ namespace NadekoBot.Modules.Help
 
         private readonly AsyncLazy<ulong> _lazyClientId;
 
-        public Help(GlobalPermissionService perms, CommandService cmds, BotSettingsService bss,
+        public Help(GlobalPermissionService perms, CommandService cmds, BotConfigService bss,
             IServiceProvider services, DiscordSocketClient client, IBotStrings strings)
         {
             _cmds = cmds;
@@ -59,6 +64,8 @@ namespace NadekoBot.Modules.Help
                 .WithDefault(Context)
                 .WithOverride("{0}", () => clientId.ToString())
                 .WithOverride("{1}", () => Prefix)
+                .WithOverride("%prefix%", () => Prefix)
+                .WithOverride("%bot.prefix%", () => Prefix)
                 .Build();
 
             var app = await _client.GetApplicationInfoAsync();
@@ -76,17 +83,74 @@ namespace NadekoBot.Modules.Help
         }
 
         [NadekoCommand, Usage, Description, Aliases]
-        public async Task Modules()
+        public async Task Modules(int page = 1)
         {
-            var embed = new EmbedBuilder().WithOkColor()
-                .WithFooter(efb => efb.WithText("ℹ️ " + GetText("modules_footer", Prefix)))
-                .WithTitle(GetText("list_of_modules"))
-                .WithDescription(string.Join("\n",
-                                     _cmds.Modules.GroupBy(m => m.GetTopLevelModule())
-                                         .Where(m => !_perms.BlockedModules.Contains(m.Key.Name.ToLowerInvariant()))
-                                         .Select(m => "• " + m.Key.Name)
-                                         .OrderBy(s => s)));
-            await ctx.Channel.EmbedAsync(embed).ConfigureAwait(false);
+            if (--page < 0)
+                return;
+
+            var topLevelModules = _cmds.Modules.GroupBy(m => m.GetTopLevelModule())
+                .Where(m => !_perms.BlockedModules.Contains(m.Key.Name.ToLowerInvariant()))
+                .Select(x => x.Key)
+                .ToList();
+            
+            await ctx.SendPaginatedConfirmAsync(page, cur =>
+            {
+                var embed = new EmbedBuilder().WithOkColor()
+                    .WithTitle(GetText("list_of_modules"));
+
+                var localModules = topLevelModules.Skip(12 * cur)
+                    .Take(12)
+                    .ToList();
+
+                if (!localModules.Any())
+                {
+                    embed = embed.WithOkColor()
+                        .WithDescription(GetText("module_page_empty"));
+                    return embed;
+                }
+                
+                localModules
+                    .OrderBy(module => module.Name)
+                    .ForEach(module => embed.AddField($"{GetModuleEmoji(module.Name)} {module.Name}",
+                        GetText($"module_description_{module.Name.ToLowerInvariant()}") + "\n" +
+                        Format.Code(GetText("module_footer", Prefix, module.Name.ToLowerInvariant())),
+                        true));
+
+                return embed;
+            }, topLevelModules.Count(), 12, false);
+        }
+
+        private string GetModuleEmoji(string moduleName)
+        {
+            moduleName = moduleName.ToLowerInvariant();
+            switch (moduleName)
+            {
+                case "help":
+                    return "❓";
+                case "administration":
+                    return "🛠️";
+                case "customreactions":
+                    return "🗣️";
+                case "searches":
+                    return "🔍";
+                case "utility":
+                    return "🔧";
+                case "games":
+                    return "🎲";
+                case "gambling":
+                    return "💰";
+                case "music":
+                    return "🎶";
+                case "nsfw":
+                    return "😳";
+                case "permissions":
+                    return "🚓";
+                case "xp":
+                    return "📝";
+                default:
+                    return "📖";
+                
+            }
         }
 
         [NadekoCommand, Usage, Description, Aliases]
@@ -95,11 +159,15 @@ namespace NadekoBot.Modules.Help
         {
             var channel = ctx.Channel;
 
-            var (opts, _) = OptionsParser.ParseFrom(new CommandsOptions(), args);
 
             module = module?.Trim().ToUpperInvariant();
             if (string.IsNullOrWhiteSpace(module))
+            {
+                await Modules();
                 return;
+            }
+
+            var (opts, _) = OptionsParser.ParseFrom(new CommandsOptions(), args);
 
             // Find commands for that module
             // don't show commands which are blocked
@@ -212,6 +280,7 @@ namespace NadekoBot.Modules.Help
                         return;
                     var (plainText, helpEmbed) = data;
                     await ch.EmbedAsync(helpEmbed, msg: plainText ?? "").ConfigureAwait(false);
+                    try{ await ctx.OkAsync(); } catch { } // ignore if bot can't react
                 }
                 catch (Exception)
                 {
@@ -226,7 +295,7 @@ namespace NadekoBot.Modules.Help
         
         [NadekoCommand, Usage, Description, Aliases]
         [OwnerOnly]
-        public async Task GenCmdList([Leftover] string path = null)
+        public async Task GenCmdList()
         {
             _ = ctx.Channel.TriggerTypingAsync();
 
@@ -238,10 +307,9 @@ namespace NadekoBot.Modules.Help
                 .OrderBy(x => x.Key)
                 .ToDictionary(
                     x => x.Key,
-                    x => x.Distinct(x => x.Aliases.First())
+                    x => x.Distinct(c => c.Aliases.First())
                         .Select(com =>
                         {
-                            var module = com.Module.GetTopLevelModule();
                             List<string> optHelpStr = null;
                             var opt = ((NadekoOptionsAttribute)com.Attributes.FirstOrDefault(x => x is NadekoOptionsAttribute))?.OptionType;
                             if (opt != null)
@@ -252,8 +320,8 @@ namespace NadekoBot.Modules.Help
                             return new CommandJsonObject
                             {
                                 Aliases = com.Aliases.Select(alias => Prefix + alias).ToArray(),
-                                Description = com.RealSummary(_strings, Prefix),
-                                Usage = com.RealRemarksArr(_strings, Prefix),
+                                Description = com.RealSummary(_strings, ctx.Guild?.Id, Prefix),
+                                Usage = com.RealRemarksArr(_strings, ctx.Guild?.Id, Prefix),
                                 Submodule = com.Module.Name,
                                 Module = com.Module.GetTopLevelModule().Name,
                                 Options = optHelpStr,
@@ -280,23 +348,57 @@ namespace NadekoBot.Modules.Help
                 var config = new AmazonS3Config {ServiceURL = serviceUrl};
                 using (var client = new AmazonS3Client(accessKey, secretAcccessKey, config))
                 {
-                    var res = await client.PutObjectAsync(new PutObjectRequest()
+                    await client.PutObjectAsync(new PutObjectRequest()
                     {
                         BucketName = "nadeko-pictures",
                         ContentType = "application/json",
                         ContentBody = uploadData,
                         // either use a path provided in the argument or the default one for public nadeko, other/cmds.json
-                        Key = path ?? "other/cmds.json",
+                        Key = $"cmds/{StatsService.BotVersion}.json",
                         CannedACL = S3CannedACL.PublicRead
                     });
+                }
+
+                const string cmdVersionsFilePath = "../../cmd-versions.json";
+                var versionListString = File.Exists(cmdVersionsFilePath)
+                    ? await File.ReadAllTextAsync(cmdVersionsFilePath)
+                    : "[]";
+
+                var versionList = System.Text.Json.JsonSerializer.Deserialize<List<string>>(versionListString);
+                if (!versionList.Contains(StatsService.BotVersion))
+                {
+                    // save the file with new version added
+                    // versionList.Add(StatsService.BotVersion);
+                    versionListString = System.Text.Json.JsonSerializer.Serialize(
+                        versionList.Prepend(StatsService.BotVersion),
+                        new JsonSerializerOptions()
+                        {
+                            WriteIndented = true
+                        });
+                    await File.WriteAllTextAsync(cmdVersionsFilePath, versionListString);
+                    
+                    // upload the updated version list
+                    using var client = new AmazonS3Client(accessKey, secretAcccessKey, config);
+                    await client.PutObjectAsync(new PutObjectRequest()
+                    {
+                        BucketName = "nadeko-pictures",
+                        ContentType = "application/json",
+                        ContentBody = versionListString,
+                        // either use a path provided in the argument or the default one for public nadeko, other/cmds.json
+                        Key = "cmds/versions.json",
+                        CannedACL = S3CannedACL.PublicRead
+                    });
+                }
+                else
+                {
+                    Log.Warning("Version {Version} already exists in the version file. " +
+                                "Did you forget to increment it?", StatsService.BotVersion);
                 }
             }
 
             // also send the file, but indented one, to chat
-            using (var rDataStream = new MemoryStream(Encoding.ASCII.GetBytes(readableData)))
-            {
-                await ctx.Channel.SendFileAsync(rDataStream, "cmds.json", GetText("commandlist_regen")).ConfigureAwait(false);
-            }
+            using var rDataStream = new MemoryStream(Encoding.ASCII.GetBytes(readableData));
+            await ctx.Channel.SendFileAsync(rDataStream, "cmds.json", GetText("commandlist_regen")).ConfigureAwait(false);
         }
 
         [NadekoCommand, Usage, Description, Aliases]
@@ -322,7 +424,6 @@ namespace NadekoBot.Modules.Help
 
     }
 
-    // todo 3.3 / 3.4 add versions to the cmds.json
     internal class CommandJsonObject
     {
         public string[] Aliases { get; set; }

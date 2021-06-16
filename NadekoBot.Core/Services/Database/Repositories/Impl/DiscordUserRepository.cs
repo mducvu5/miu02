@@ -90,7 +90,7 @@ VALUES ({userId}, {username}, {discrim}, {avatarId});
                 .FirstOrDefault(x => x.UserId == userId)
                 ?.CurrencyAmount ?? 0;
 
-        public void RemoveFromMany(List<ulong> ids)
+        public void RemoveFromMany(IEnumerable<ulong> ids)
         {
             var items = _set.AsQueryable().Where(x => ids.Contains(x.UserId));
             foreach (var item in items)
@@ -160,19 +160,6 @@ VALUES ({userId}, {name}, {discrim}, {avatarId}, {amount});
 ");
             }
             return true;
-        }
-
-        public void CurrencyDecay(float decay, ulong botId)
-        {
-            _context.Database.ExecuteSqlInterpolated($@"
-UPDATE DiscordUser
-SET CurrencyAmount=CurrencyAmount-ROUND(CurrencyAmount*{decay}-0.5)
-WHERE CurrencyAmount>0 AND UserId!={botId};");
-        }
-
-        public long GetCurrencyDecayAmount(float decay)
-        {
-            return (long)_set.Sum(x => Math.Round(x.CurrencyAmount * decay - 0.5));
         }
 
         public decimal GetTotalCurrency()

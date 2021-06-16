@@ -28,6 +28,9 @@ namespace NadekoBot.Extensions
         public static Task<IUserMessage> SendErrorAsync(this IMessageChannel ch, string error)
              => ch.SendMessageAsync("", embed: new EmbedBuilder().WithErrorColor().WithDescription(error).Build());
 
+        public static Task<IUserMessage> SendPendingAsync(this IMessageChannel ch, string message)
+            => ch.SendMessageAsync("", embed: new EmbedBuilder().WithPendingColor().WithDescription(message).Build());
+        
         public static Task<IUserMessage> SendConfirmAsync(this IMessageChannel ch, string title, string text, string url = null, string footer = null)
         {
             var eb = new EmbedBuilder().WithOkColor().WithDescription(text)
@@ -44,9 +47,8 @@ namespace NadekoBot.Extensions
 
         public static Task<IUserMessage> SendTableAsync<T>(this IMessageChannel ch, string seed, IEnumerable<T> items, Func<T, string> howToPrint, int columns = 3)
         {
-            var i = 0;
             return ch.SendMessageAsync($@"{seed}```css
-{string.Join("\n", items.GroupBy(item => (i++) / columns)
+{string.Join("\n", items.Chunk(columns)
                         .Select(ig => string.Concat(ig.Select(el => howToPrint(el)))))}
 ```");
         }
@@ -155,6 +157,9 @@ namespace NadekoBot.Extensions
 
         public static Task OkAsync(this ICommandContext ctx)
             => ctx.Message.AddReactionAsync(new Emoji("✅"));
+        
+        public static Task ErrorAsync(this ICommandContext ctx)
+            => ctx.Message.AddReactionAsync(new Emoji("❌"));
         
         public static Task WarningAsync(this ICommandContext ctx)
             => ctx.Message.AddReactionAsync(new Emoji("⚠️"));

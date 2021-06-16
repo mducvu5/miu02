@@ -2,14 +2,11 @@ using Discord;
 using Discord.WebSocket;
 using NadekoBot.Common;
 using NadekoBot.Common.Collections;
-using NadekoBot.Core.Modules.Xp.Common;
 using NadekoBot.Core.Services;
 using NadekoBot.Core.Services.Database.Models;
 using NadekoBot.Core.Services.Impl;
 using NadekoBot.Extensions;
-using NadekoBot.Modules.Xp.Common;
 using Newtonsoft.Json;
-using NLog;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
@@ -23,6 +20,10 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
+using NadekoBot.Core.Modules.Xp;
+using Serilog;
 using StackExchange.Redis;
 using Image = SixLabors.ImageSharp.Image;
 
@@ -38,48 +39,45 @@ namespace NadekoBot.Modules.Xp.Services
 
         private readonly DbService _db;
         private readonly CommandHandler _cmd;
-        private readonly IBotConfigProvider _bc;
         private readonly IImageCache _images;
-        private readonly Logger _log;
         private readonly IBotStrings _strings;
         private readonly IDataCache _cache;
         private readonly FontProvider _fonts;
         private readonly IBotCredentials _creds;
         private readonly ICurrencyService _cs;
+        private readonly Task updateXpTask;
+        private readonly IHttpClientFactory _httpFactory;
+        private readonly XpConfigService _xpConfig;
+        
         public const int XP_REQUIRED_LVL_1 = 36;
 
-        private readonly ConcurrentDictionary<ulong, ConcurrentHashSet<ulong>> _excludedRoles
-            = new ConcurrentDictionary<ulong, ConcurrentHashSet<ulong>>();
+        private readonly ConcurrentDictionary<ulong, ConcurrentHashSet<ulong>> _excludedRoles;
 
-        private readonly ConcurrentDictionary<ulong, ConcurrentHashSet<ulong>> _excludedChannels
-            = new ConcurrentDictionary<ulong, ConcurrentHashSet<ulong>>();
+        private readonly ConcurrentDictionary<ulong, ConcurrentHashSet<ulong>> _excludedChannels;
 
-        private readonly ConcurrentHashSet<ulong> _excludedServers
-            = new ConcurrentHashSet<ulong>();
+        private readonly ConcurrentHashSet<ulong> _excludedServers;
 
         private readonly ConcurrentQueue<UserCacheItem> _addMessageXp
             = new ConcurrentQueue<UserCacheItem>();
-
-        private readonly Task updateXpTask;
-        private readonly IHttpClientFactory _httpFactory;
         private XpTemplate _template;
         private readonly DiscordSocketClient _client;
 
-        public XpService(DiscordSocketClient client, CommandHandler cmd, IBotConfigProvider bc,
-            NadekoBot bot, DbService db, IBotStrings strings, IDataCache cache,
-            FontProvider fonts, IBotCredentials creds, ICurrencyService cs, IHttpClientFactory http)
+        public XpService(DiscordSocketClient client, CommandHandler cmd, NadekoBot bot, DbService db,
+            IBotStrings strings, IDataCache cache, FontProvider fonts, IBotCredentials creds,
+            ICurrencyService cs, IHttpClientFactory http, XpConfigService xpConfig)
         {
             _db = db;
             _cmd = cmd;
-            _bc = bc;
             _images = cache.LocalImages;
-            _log = LogManager.GetCurrentClassLogger();
             _strings = strings;
             _cache = cache;
             _fonts = fonts;
             _creds = creds;
             _cs = cs;
             _httpFactory = http;
+            _xpConfig = xpConfig;
+            _excludedServers = new ConcurrentHashSet<ulong>();
+            _excludedChannels = new ConcurrentDictionary<ulong, ConcurrentHashSet<ulong>>();
             _client = client;
 
             InternalReloadXpTemplate();
@@ -271,7 +269,7 @@ namespace NadekoBot.Modules.Xp.Services
                 }
                 catch (Exception ex)
                 {
-                    _log.Warn(ex);
+                    Log.Error(ex, "Error In the XP update loop");
                 }
             }
         }
@@ -290,8 +288,7 @@ namespace NadekoBot.Modules.Xp.Services
             }
             catch (Exception ex)
             {
-                _log.Warn(ex);
-                _log.Error("Xp template is invalid. Loaded default values.");
+                Log.Error(ex, "Xp template is invalid. Loaded default values");
                 _template = new XpTemplate();
                 File.WriteAllText("./data/xp_template_backup.json",
                     JsonConvert.SerializeObject(_template, Formatting.Indented));
@@ -541,7 +538,7 @@ namespace NadekoBot.Modules.Xp.Services
             var key = $"{_creds.RedisKey()}_user_xp_vc_join_{user.Id}";
             var value = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            _cache.Redis.GetDatabase().StringSet(key, value, TimeSpan.FromMinutes(_bc.BotConfig.MaxXpMinutes), When.NotExists);
+            _cache.Redis.GetDatabase().StringSet(key, value, TimeSpan.FromMinutes(_xpConfig.Data.VoiceMaxMinutes), When.NotExists);
         }
 
         private void UserLeftVoiceChannel(SocketGuildUser user, SocketVoiceChannel channel)
@@ -559,7 +556,7 @@ namespace NadekoBot.Modules.Xp.Services
             var dateStart = DateTimeOffset.FromUnixTimeSeconds(startUnixTime);
             var dateEnd = DateTimeOffset.UtcNow;
             var minutes = (dateEnd - dateStart).TotalMinutes;
-            var xp = _bc.BotConfig.VoiceXpPerMinute * minutes;
+            var xp = _xpConfig.Data.VoiceXpPerMinute * minutes;
             var actualXp = (int) Math.Floor(xp);
 
             if (actualXp > 0)
@@ -597,7 +594,18 @@ namespace NadekoBot.Modules.Xp.Services
                 if (!ShouldTrackXp(user, arg.Channel.Id))
                     return;
 
-                if (!arg.Content.Contains(' ') && arg.Content.Length < 5)
+                var xp = 0;
+                if (arg.Attachments.Any(a => a.Height >= 128 && a.Width >= 128))
+                {
+                    xp = _xpConfig.GetRawData().XpFromImage;
+                }
+                
+                if (arg.Content.Contains(' ') || arg.Content.Length >= 5)
+                {
+                    xp = Math.Max(xp, _xpConfig.GetRawData().XpPerMessage);
+                }
+
+                if (xp <= 0)
                     return;
 
                 if (!SetUserRewarded(user.Id))
@@ -608,7 +616,7 @@ namespace NadekoBot.Modules.Xp.Services
                     Guild = user.Guild,
                     Channel = arg.Channel,
                     User = user,
-                    XpAmount = _bc.BotConfig.XpPerMessage
+                    XpAmount = xp 
                 });
             });
             return Task.CompletedTask;
@@ -667,7 +675,7 @@ namespace NadekoBot.Modules.Xp.Services
 
             return r.StringSet(key,
                 true,
-                TimeSpan.FromMinutes(_bc.BotConfig.XpMinutesTimeout),
+                TimeSpan.FromMinutes(_xpConfig.Data.MessageXpCooldown),
                 StackExchange.Redis.When.NotExists);
         }
 
@@ -1043,7 +1051,7 @@ namespace NadekoBot.Modules.Xp.Services
                         }
                         catch (Exception ex)
                         {
-                            _log.Warn(ex);
+                            Log.Warning(ex, "Error drawing avatar image");
                         }
                     }
 
@@ -1157,7 +1165,7 @@ namespace NadekoBot.Modules.Xp.Services
                 }
                 catch (Exception ex)
                 {
-                    _log.Warn(ex);
+                    Log.Warning(ex, "Error drawing club image");
                 }
             }
         }
@@ -1186,6 +1194,21 @@ namespace NadekoBot.Modules.Xp.Services
                 uow.Xp.ResetGuildXp(guildId);
                 uow.SaveChanges();
             }
+        }
+
+        public async Task ResetXpRewards(ulong guildId)
+        {
+            using var uow = _db.GetDbContext();
+            var guildConfig = uow.GuildConfigs.ForId(guildId, 
+                set => set
+                    .Include(x => x.XpSettings)
+                    .ThenInclude(x => x.CurrencyRewards)
+                    .Include(x => x.XpSettings)
+                    .ThenInclude(x => x.RoleRewards));
+            
+            uow._context.RemoveRange(guildConfig.XpSettings.RoleRewards);
+            uow._context.RemoveRange(guildConfig.XpSettings.CurrencyRewards);
+            await uow.SaveChangesAsync();
         }
     }
 }

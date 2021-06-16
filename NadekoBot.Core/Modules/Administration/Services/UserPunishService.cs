@@ -13,8 +13,9 @@ using NadekoBot.Core.Common.TypeReaders.Models;
 using NadekoBot.Core.Services;
 using NadekoBot.Core.Services.Database.Models;
 using NadekoBot.Extensions;
+using NadekoBot.Modules.Permissions.Services;
 using Newtonsoft.Json;
-using NLog;
+using Serilog;
 
 namespace NadekoBot.Modules.Administration.Services
 {
@@ -22,15 +23,15 @@ namespace NadekoBot.Modules.Administration.Services
     {
         private readonly MuteService _mute;
         private readonly DbService _db;
-        private readonly Logger _log;
+        private readonly BlacklistService _blacklistService;
         private readonly Timer _warnExpiryTimer;
 
-        public UserPunishService(MuteService mute, DbService db)
+        public UserPunishService(MuteService mute, DbService db, BlacklistService blacklistService)
         {
             _mute = mute;
             _db = db;
-            _log = LogManager.GetCurrentClassLogger();
-
+            _blacklistService = blacklistService;
+            
             _warnExpiryTimer = new Timer(async _ =>
             {
                 await CheckAllWarnExpiresAsync();
@@ -153,7 +154,7 @@ namespace NadekoBot.Modules.Administration.Services
                     }
                     else
                     {
-                        _log.Warn($"Can't find role {roleId.Value} on server {guild.Id} to apply punishment.");
+                        Log.Warning($"Can't find role {roleId.Value} on server {guild.Id} to apply punishment.");
                     }
 
                     break;
@@ -179,7 +180,7 @@ WHERE GuildId in (SELECT GuildId FROM GuildConfigs WHERE WarnExpireHours > 0 AND
 
                 if(cleared > 0 || deleted > 0)
                 {
-                    _log.Info($"Cleared {cleared} warnings and deleted {deleted} warnings due to expiry.");
+                    Log.Information($"Cleared {cleared} warnings and deleted {deleted} warnings due to expiry.");
                 }
             }
         }
@@ -214,6 +215,13 @@ WHERE GuildId={guildId}
             }
         }
 
+        public Task<int> GetWarnExpire(ulong guildId)
+        {
+            using var uow = _db.GetDbContext();
+            var config = uow.GuildConfigs.ForId(guildId);
+            return Task.FromResult(config.WarnExpireHours / 24);
+        }
+        
         public async Task WarnExpireAsync(ulong guildId, int days, bool delete)
         {
             using (var uow = _db.GetDbContext())
@@ -347,29 +355,15 @@ WHERE GuildId={guildId}
 
             //if user is null, means that person couldn't be found
             var missing = bans
-                .Where(x => !x.Id.HasValue)
-                .Count();
+                .Count(x => !x.Id.HasValue);
 
             //get only data for found users
             var found = bans
                 .Where(x => x.Id.HasValue)
                 .Select(x => x.Id.Value)
-                .ToArray();
+                .ToList();
 
-            using (var uow = _db.GetDbContext())
-            {
-                var bc = uow.BotConfig.GetOrCreate(set => set.Include(x => x.Blacklist));
-                //blacklist the users
-                bc.Blacklist.AddRange(found.Select(x =>
-                    new BlacklistItem
-                    {
-                        ItemId = x,
-                        Type = BlacklistType.User,
-                    }));
-                //clear their currencies
-                uow.DiscordUsers.RemoveFromMany(found.Select(x => x).ToList());
-                uow.SaveChanges();
-            }
+            _blacklistService.BlacklistUsers(found);
 
             return (bans, missing);
         }

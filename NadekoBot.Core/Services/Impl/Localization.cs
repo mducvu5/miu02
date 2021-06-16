@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Discord;
-using NLog;
 using NadekoBot.Common;
 using Newtonsoft.Json;
 using System.IO;
@@ -12,8 +11,7 @@ namespace NadekoBot.Core.Services.Impl
 {
     public class Localization : ILocalization
     {
-        private readonly Logger _log;
-        private readonly BotSettingsService _bss;
+        private readonly BotConfigService _bss;
         private readonly DbService _db;
 
         public ConcurrentDictionary<ulong, CultureInfo> GuildCultureInfos { get; }
@@ -22,10 +20,8 @@ namespace NadekoBot.Core.Services.Impl
         private static readonly Dictionary<string, CommandData> _commandData = JsonConvert.DeserializeObject<Dictionary<string, CommandData>>(
                 File.ReadAllText("./data/strings/commands/commands.en-US.json"));
 
-        public Localization(BotSettingsService bss, NadekoBot bot, DbService db)
+        public Localization(BotConfigService bss, NadekoBot bot, DbService db)
         {
-            _log = LogManager.GetCurrentClassLogger();
-
             _bss = bss;
             _db = db;
 

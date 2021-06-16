@@ -1,13 +1,18 @@
+using System.Text.RegularExpressions;
 using NadekoBot.Common.Yml;
 using NadekoBot.Core.Common.Configs;
 using YamlDotNet.Serialization;
 
 namespace NadekoBot.Core.Common
 {
-    public class YamlSeria : ISettingsSeria
+    public class YamlSeria : IConfigSeria
     {
         private readonly ISerializer _serializer;
         private readonly IDeserializer _deserializer;
+
+        private static readonly Regex CodePointRegex
+            = new Regex(@"(\\U(?<code>[a-zA-Z0-9]{8})|\\u(?<code>[a-zA-Z0-9]{4})|\\x(?<code>[a-zA-Z0-9]{2}))",
+                RegexOptions.Compiled);
 
         public YamlSeria()
         {
@@ -15,8 +20,17 @@ namespace NadekoBot.Core.Common
             _deserializer = Yaml.Deserializer;
         }
         
-        public string Serialize<T>(T obj) 
-            => _serializer.Serialize(obj);
+        public string Serialize<T>(T obj)
+        {
+            var escapedOutput = _serializer.Serialize(obj);
+            var output = CodePointRegex.Replace(escapedOutput, me =>
+            {
+                var str = me.Groups["code"].Value;
+                var newString = YamlHelper.UnescapeUnicodeCodePoint(str);
+                return newString;
+            });
+            return output;
+        }
 
         public T Deserialize<T>(string data) 
             => _deserializer.Deserialize<T>(data);

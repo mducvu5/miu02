@@ -89,20 +89,32 @@ iamnot:
 addcustreact:
 - addcustreact
 - acr
+- expradd
+- exadd
+- exa
 listcustreact:
 - listcustreact
 - lcr
+- exprli
+- exl
 listcustreactg:
 - listcustreactg
 - lcrg
+- exprlg
+- exlg
 showcustreact:
 - showcustreact
 - scr
+- exs
 delcustreact:
 - delcustreact
 - dcr
+- exprdel
+- exd
+- exd
 crclear:
 - crclear
+- exclear
 fwclear:
 - fwclear
 aliasesclear:
@@ -211,8 +223,6 @@ remindlist:
 - remindlist
 - remindl
 - remindlst
-remindtemplate:
-- remindtemplate
 serverinfo:
 - serverinfo
 - sinfo
@@ -322,7 +332,7 @@ cmdcooldown:
 - cmdcd
 allcmdcooldowns:
 - allcmdcooldowns
-- acmdcds
+- cmdcds
 quoteadd:
 - quoteadd
 - .
@@ -426,6 +436,7 @@ next:
 - n
 play:
 - play
+- p
 - start
 stop:
 - stop
@@ -435,11 +446,11 @@ destroy:
 - d
 pause:
 - pause
-- p
 queue:
 - queue
 - q
 - yq
+- enqueue
 queuenext:
 - queuenext
 - qn
@@ -459,9 +470,7 @@ nowplaying:
 volume:
 - volume
 - vol
-defvol:
 - defvol
-- dv
 playlist:
 - playlist
 - pl
@@ -477,23 +486,23 @@ radio:
 local:
 - local
 - lo
-move:
+join:
+- join
+- j
 - move
 - mv
-songremove:
+trackremove:
 - songremove
 - srm
 movesong:
 - movesong
 - ms
-setmaxqueue:
-- setmaxqueue
-- smq
 reptcursong:
 - reptcursong
 - rcs
-playlistrepeat:
-- playlistrepeat
+queuerepeat:
+- queuerepeat
+- qrp
 - rpl
 save:
 - save
@@ -510,9 +519,6 @@ playlistshow:
 deleteplaylist:
 - deleteplaylist
 - delpls
-autoplay:
-- autoplay
-- ap
 streamadd:
 - streamadd
 - sta
@@ -529,9 +535,13 @@ streamoffline:
 - sto
 - stoff
 streammessage:
-- streammessage
+- streammsg
 - stm
 - stmsg
+streammessageall:
+- streammsgall
+- stma
+- stmsga
 streamcheck:
 - streamcheck
 - stc
@@ -602,6 +612,9 @@ lmgtfy:
 google:
 - google
 - g
+duckduckgo:
+  - duckduckgo
+  - ddg
 hearthstone:
 - hearthstone
 - hs
@@ -639,6 +652,8 @@ avatar:
 - av
 hentai:
 - hentai
+nhentai:
+  - nhentai
 danbooru:
 - danbooru
 derpibooru:
@@ -711,12 +726,16 @@ antiraid:
 - antiraid
 antispam:
 - antispam
+antialt:
+- antialt
 chatmute:
 - chatmute
 voicemute:
 - voicemute
 konachan:
 - konachan
+sankaku:
+  - sankaku
 muterole:
 - muterole
 - setmuterole
@@ -734,9 +753,6 @@ placelist:
 - placelist
 place:
 - place
-togethertube:
-- togethertube
-- totube
 poll:
 - poll
 - ppoll
@@ -783,18 +799,12 @@ logevents:
 - logevents
 log:
 - log
-fairplay:
-- fairplay
-- fp
-songautodelete:
-- songautodelete
-- sad
+autodisconnect:
+- autodisconnect
+- autodc
 define:
 - define
 - def
-setmaxplaytime:
-- setmaxplaytime
-- smp
 activity:
 - activity
 autohentai:
@@ -858,10 +868,11 @@ setmusicchannel:
 unsetmusicchannel:
 - unsetmusicchannel
 - usmch
+musicquality:
+- musicquality
+- mquality
 imagesreload:
 - imagesreload
-botconfigreload:
-- botconfigreload
 stringsreload:
 - stringsreload
 shardstats:
@@ -891,12 +902,20 @@ crreact:
 - crr
 crad:
 - crad
+- exad
+crat:
+- crat
+- exat
 crdm:
 - crdm
+- exdm
 crca:
 - crca
+- exca
 crsreload:
 - crsreload
+- expreload
+- exrel
 aliaslist:
 - aliaslist
 - cmdmaplist
@@ -912,21 +931,26 @@ warn:
 - warn
 startupcommandadd:
 - scadd
+- startcmdadd
 autocommandadd:
+- acadd
 - autocmdadd
 startupcommandremove:
 - scrm
+- startcmdrm
+autocommandremove:
+- acrm
 - autocmdrm
-- autorm
 startupcommandsclear:
 - scclear
 - scclr
 startupcommandslist:
 - sclist
-autocommands:
-- autocommands
-- autocmds
+- startcmdlist
+autocommandslist:
+- aclist
 - autolist
+- autocommands
 - autocmdlist
 unban:
 - unban
@@ -960,13 +984,23 @@ ping:
 - ping
 time:
 - time
+shop:
+  - shop
 shopadd:
 - shopadd
 shopremove:
 - shopremove
 - shoprm
-shop:
-- shop
+shopchangeprice:
+- shopchangeprice
+- shopprice
+shopchangename:
+- shopchangename
+- shopname
+shopswap:
+- shopswap
+shopmove:
+- shopmove
 buy:
 - buy
 gamevoicechannel:
@@ -1007,6 +1041,14 @@ streamrolewhitelist:
 botconfigedit:
 - botconfigedit
 - bce
+config:
+- config
+- conf
+configreload:
+- configreload 
+- creload
+- confreload
+- crel
 nsfwtagblacklist:
 - nsfwtagbl
 - nsfwtbl
@@ -1032,6 +1074,8 @@ xpleveluprewards:
 - xprrs
 - xprolerewards
 - xpcurrewards
+xprewsreset:
+- xprewsreset
 xprolereward:
 - xprolereward
 - xprr
@@ -1078,6 +1122,7 @@ clubbans:
 - clubbans
 clubleaderboard:
 - clublb
+- clubs
 nsfwclearcache:
 - nsfwcc
 clubadmin:
@@ -1102,6 +1147,7 @@ feedlist:
 editcustreact:
 - editcustreact
 - ecr
+- exe
 say:
 - say
 sqlexec:
@@ -1129,9 +1175,6 @@ rafflecur:
 - rafflecur
 rip:
 - rip
-autodisconnect:
-- autodisconnect
-- autodc
 timelyset:
 - timelyset
 timely:
@@ -1195,3 +1238,11 @@ nsfwtoggle:
 - nsfwtgl
 economy:
 - economy
+purgeuser:
+- purgeuser 
+crsimport:
+  - crsimport
+  - eximport
+crsexport:
+  - crsexport
+  - exexport

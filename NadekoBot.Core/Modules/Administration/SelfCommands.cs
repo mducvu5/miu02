@@ -12,6 +12,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using NadekoBot.Core.Services;
+using Serilog;
 
 namespace NadekoBot.Modules.Administration
 {
@@ -41,7 +42,7 @@ namespace NadekoBot.Modules.Administration
                     return;
 
                 var guser = (IGuildUser)ctx.User;
-                var cmd = new StartupCommand()
+                var cmd = new AutoCommand()
                 {
                     CommandText = cmdText,
                     ChannelId = ctx.Channel.Id,
@@ -77,7 +78,7 @@ namespace NadekoBot.Modules.Administration
                     return;
 
                 var guser = (IGuildUser)ctx.User;
-                var cmd = new StartupCommand()
+                var cmd = new AutoCommand()
                 {
                     CommandText = cmdText,
                     ChannelId = ctx.Channel.Id,
@@ -102,19 +103,21 @@ namespace NadekoBot.Modules.Administration
                     return;
 
                 var scmds = _service.GetStartupCommands()
-                    .Where(x => x.Interval <= 0)
                     .Skip(page * 5)
-                    .Take(5);
-                if (!scmds.Any())
+                    .Take(5)
+                    .ToList();
+                
+                if (scmds.Count == 0)
                 {
                     await ReplyErrorLocalizedAsync("startcmdlist_none").ConfigureAwait(false);
                 }
                 else
                 {
+                    var i = 0;
                     await ctx.Channel.SendConfirmAsync(
                         text: string.Join("\n", scmds
                         .Select(x => $@"```css
-#{x.Index}
+#{++i + page * 5}
 [{GetText("server")}]: {(x.GuildId.HasValue ? $"{x.GuildName} #{x.GuildId}" : "-")}
 [{GetText("channel")}]: {x.ChannelName} #{x.ChannelId}
 [{GetText("command_text")}]: {x.CommandText}```")),
@@ -127,25 +130,26 @@ namespace NadekoBot.Modules.Administration
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
             [OwnerOnly]
-            public async Task AutoCommands(int page = 1)
+            public async Task AutoCommandsList(int page = 1)
             {
                 if (page-- < 1)
                     return;
 
-                var scmds = _service.GetStartupCommands()
-                    .Where(x => x.Interval >= 5)
+                var scmds = _service.GetAutoCommands()
                     .Skip(page * 5)
-                    .Take(5);
+                    .Take(5)
+                    .ToList();
                 if (!scmds.Any())
                 {
                     await ReplyErrorLocalizedAsync("autocmdlist_none").ConfigureAwait(false);
                 }
                 else
                 {
+                    var i = 0;
                     await ctx.Channel.SendConfirmAsync(
                         text: string.Join("\n", scmds
                         .Select(x => $@"```css
-#{x.Index}
+#{++i + page * 5}
 [{GetText("server")}]: {(x.GuildId.HasValue ? $"{x.GuildName} #{x.GuildId}" : "-")}
 [{GetText("channel")}]: {x.ChannelName} #{x.ChannelId}
 {GetIntervalText(x.Interval)}
@@ -178,14 +182,28 @@ namespace NadekoBot.Modules.Administration
 
                 await Task.Delay(miliseconds).ConfigureAwait(false);
             }
-
+            
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
             [UserPerm(GuildPerm.Administrator)]
             [OwnerOnly]
+            public async Task AutoCommandRemove([Leftover] int index)
+            {
+                if (!_service.RemoveAutoCommand(--index, out _))
+                {
+                    await ReplyErrorLocalizedAsync("acrm_fail").ConfigureAwait(false);
+                    return;
+                }
+                
+                await ctx.OkAsync();
+            }
+
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            [OwnerOnly]
             public async Task StartupCommandRemove([Leftover] int index)
             {
-                if (!_service.RemoveStartupCommand(index, out _))
+                if (!_service.RemoveStartupCommand(--index, out _))
                     await ReplyErrorLocalizedAsync("scrm_fail").ConfigureAwait(false);
                 else
                     await ReplyConfirmLocalizedAsync("scrm").ConfigureAwait(false);
@@ -333,7 +351,7 @@ namespace NadekoBot.Modules.Administration
                 }
                 catch (RateLimitedException)
                 {
-                    _log.Warn("You've been ratelimited. Wait 2 hours to change your name.");
+                    Log.Warning("You've been ratelimited. Wait 2 hours to change your name");
                 }
 
                 await ReplyConfirmLocalizedAsync("bot_name", Format.Bold(newName)).ConfigureAwait(false);
@@ -495,7 +513,6 @@ namespace NadekoBot.Modules.Administration
             [OwnerOnly]
             public async Task StringsReload()
             {
-                // todo add publisher to this. something like v3 eventpusher
                 _strings.Reload();
                 await ReplyConfirmLocalizedAsync("bot_strings_reloaded").ConfigureAwait(false);
             }

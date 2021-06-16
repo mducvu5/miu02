@@ -4,11 +4,12 @@ using NadekoBot.Core.Modules.Gambling.Common.Waifu;
 using NadekoBot.Core.Services;
 using NadekoBot.Core.Services.Database.Models;
 using NadekoBot.Core.Services.Database.Repositories;
-using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NadekoBot.Core.Modules.Gambling.Common;
+using NadekoBot.Core.Modules.Gambling.Services;
 
 namespace NadekoBot.Modules.Gambling.Services
 {
@@ -23,23 +24,25 @@ namespace NadekoBot.Modules.Gambling.Services
 
         private readonly DbService _db;
         private readonly ICurrencyService _cs;
-        private readonly IBotConfigProvider _bc;
         private readonly IDataCache _cache;
-        private readonly Logger _log;
+        private readonly GamblingConfigService _gss;
 
-        public WaifuService(DbService db, ICurrencyService cs, IBotConfigProvider bc, IDataCache cache)
+        public WaifuService(DbService db, ICurrencyService cs, IDataCache cache,
+            GamblingConfigService gss)
         {
             _db = db;
             _cs = cs;
-            _bc = bc;
             _cache = cache;
-            _log = LogManager.GetCurrentClassLogger();
+            _gss = gss;
         }
 
         public async Task<bool> WaifuTransfer(IUser owner, ulong waifuId, IUser newOwner)
         {
             if (owner.Id == newOwner.Id || waifuId == newOwner.Id)
                 return false;
+
+            var settings = _gss.Data;
+            
             using (var uow = _db.GetDbContext())
             {
                 var waifu = uow.Waifus.ByWaifuUserId(waifuId);
@@ -62,8 +65,8 @@ namespace NadekoBot.Modules.Gambling.Services
                     }
 
                     waifu.Price = (int)(waifu.Price * 0.7); // half of 60% = 30% price reduction
-                    if (waifu.Price < _bc.BotConfig.MinWaifuPrice)
-                        waifu.Price = _bc.BotConfig.MinWaifuPrice;
+                    if (waifu.Price < settings.Waifu.MinPrice)
+                        waifu.Price = settings.Waifu.MinPrice;
                 }
                 else // if not, pay 10% fee
                 {
@@ -73,8 +76,8 @@ namespace NadekoBot.Modules.Gambling.Services
                     }
 
                     waifu.Price = (int) (waifu.Price * 0.95); // half of 10% = 5% price reduction
-                    if (waifu.Price < _bc.BotConfig.MinWaifuPrice)
-                        waifu.Price = _bc.BotConfig.MinWaifuPrice;
+                    if (waifu.Price < settings.Waifu.MinPrice)
+                        waifu.Price = settings.Waifu.MinPrice;
                 }
 
                 //new claimerId is the id of the new owner
@@ -89,12 +92,13 @@ namespace NadekoBot.Modules.Gambling.Services
 
         public int GetResetPrice(IUser user)
         {
+            var settings = _gss.Data;
             using (var uow = _db.GetDbContext())
             {
                 var waifu = uow.Waifus.ByWaifuUserId(user.Id);
 
                 if (waifu == null)
-                    return _bc.BotConfig.MinWaifuPrice;
+                    return settings.Waifu.MinPrice;
 
                 var divorces = uow._context.WaifuUpdates.Count(x => x.Old != null &&
                                                                     x.Old.UserId == user.Id &&
@@ -109,7 +113,7 @@ namespace NadekoBot.Modules.Gambling.Services
                     .Count();
 
                 return (int) Math.Ceiling(waifu.Price * 1.25f) +
-                       ((divorces + affs + 2) * _bc.BotConfig.DivorcePriceMultiplier);
+                       ((divorces + affs + 2) * settings.Waifu.Multipliers.WaifuReset);
             }
         }
 
@@ -156,6 +160,7 @@ namespace NadekoBot.Modules.Gambling.Services
 
         public async Task<(WaifuInfo, bool, WaifuClaimResult)> ClaimWaifuAsync(IUser user, IUser target, int amount)
         {
+            var settings = _gss.Data;
             WaifuClaimResult result;
             WaifuInfo w;
             bool isAffinity;
@@ -190,7 +195,7 @@ namespace NadekoBot.Modules.Gambling.Services
                         result = WaifuClaimResult.Success;
                     }
                 }
-                else if (isAffinity && amount > w.Price * 0.88f)
+                else if (isAffinity && amount > w.Price * settings.Waifu.Multipliers.CrushClaim)
                 {
                     if (!await _cs.RemoveAsync(user.Id, "Claimed Waifu", amount, gamble: true))
                     {
@@ -212,7 +217,7 @@ namespace NadekoBot.Modules.Gambling.Services
                         });
                     }
                 }
-                else if (amount >= w.Price * 1.1f) // if no affinity
+                else if (amount >= w.Price * settings.Waifu.Multipliers.NormalClaim) // if no affinity
                 {
                     if (!await _cs.RemoveAsync(user.Id, "Claimed Waifu", amount, gamble: true))
                     {
@@ -253,7 +258,6 @@ namespace NadekoBot.Modules.Gambling.Services
             {
                 var w = uow.Waifus.ByWaifuUserId(user.Id);
                 var newAff = target == null ? null : uow.DiscordUsers.GetOrCreate(target);
-                var now = DateTime.UtcNow;
                 if (w?.Affinity?.UserId == target?.Id)
                 {
                 }
@@ -310,6 +314,12 @@ namespace NadekoBot.Modules.Gambling.Services
             }
         }
 
+        public ulong GetWaifuUserId(ulong ownerId, string name)
+        {
+            using var uow = _db.GetDbContext();
+            return uow.Waifus.GetWaifuUserId(ownerId, name);
+        }
+
         public async Task<(WaifuInfo, DivorceResult, long, TimeSpan?)> DivorceWaifuAsync(IUser user, ulong targetId)
         {
             DivorceResult result;
@@ -333,7 +343,7 @@ namespace NadekoBot.Modules.Gambling.Services
                     if (w.Affinity?.UserId == user.Id)
                     {
                         await _cs.AddAsync(w.Waifu.UserId, "Waifu Compensation", amount, gamble: true);
-                        w.Price = (int) Math.Floor(w.Price * 0.75f);
+                        w.Price = (int) Math.Floor(w.Price * _gss.Data.Waifu.Multipliers.DivorceNewValue);
                         result = DivorceResult.SucessWithPenalty;
                     }
                     else
@@ -361,7 +371,7 @@ namespace NadekoBot.Modules.Gambling.Services
             return (w, result, amount, remaining);
         }
 
-        public async Task<bool> GiftWaifuAsync(ulong from, IUser giftedWaifu, WaifuItem itemObj)
+        public async Task<bool> GiftWaifuAsync(IUser from, IUser giftedWaifu, WaifuItemModel itemObj)
         {
             if (!await _cs.RemoveAsync(from, "Bought waifu item", itemObj.Price, gamble: true))
             {
@@ -370,8 +380,9 @@ namespace NadekoBot.Modules.Gambling.Services
 
             using (var uow = _db.GetDbContext())
             {
-                var w = uow.Waifus.ByWaifuUserId(giftedWaifu.Id, set => set.Include(x => x.Items)
-                    .Include(x => x.Claimer));
+                var w = uow.Waifus.ByWaifuUserId(giftedWaifu.Id, 
+                    set => set.Include(x => x.Items)
+                        .Include(x => x.Claimer));
                 if (w == null)
                 {
                     uow.Waifus.Add(w = new WaifuInfo()
@@ -383,13 +394,20 @@ namespace NadekoBot.Modules.Gambling.Services
                     });
                 }
 
-                w.Items.Add(itemObj);
-                if (w.Claimer?.UserId == from)
+                w.Items.Add(new WaifuItem()
                 {
-                    w.Price += (int) (itemObj.Price * 0.95);
+                    Name = itemObj.Name.ToLowerInvariant(),
+                    ItemEmoji = itemObj.ItemEmoji,
+                });
+                
+                if (w.Claimer?.UserId == from.Id)
+                {
+                    w.Price += (int) (itemObj.Price * _gss.Data.Waifu.Multipliers.GiftEffect);
                 }
                 else
+                {
                     w.Price += itemObj.Price / 2;
+                }
 
                 await uow.SaveChangesAsync();
             }
@@ -402,7 +420,7 @@ namespace NadekoBot.Modules.Gambling.Services
             using (var uow = _db.GetDbContext())
             {
                 var wi = uow.Waifus.GetWaifuInfo(targetId);
-                if (wi == null)
+                if (wi is null)
                 {
                     wi = new WaifuInfoStats
                     {
@@ -410,7 +428,8 @@ namespace NadekoBot.Modules.Gambling.Services
                         AffinityName = null,
                         ClaimCount = 0,
                         ClaimerName = null,
-                        Claims30 = new List<string>(),
+                        Claims = new List<string>(),
+                        Fans = new List<string>(),
                         DivorceCount = 0,
                         FullName = null,
                         Items = new List<WaifuItem>(),
@@ -470,12 +489,12 @@ namespace NadekoBot.Modules.Gambling.Services
             else if (count < 2)
                 title = AffinityTitle.Faithful;
             else if (count < 4)
-                title = AffinityTitle.Defiled;
-            else if (count < 9)
+                title = AffinityTitle.Playful;
+            else if (count < 8)
                 title = AffinityTitle.Cheater;
-            else if (count < 12)
+            else if (count < 11)
                 title = AffinityTitle.Tainted;
-            else if (count < 16)
+            else if (count < 15)
                 title = AffinityTitle.Corrupted;
             else if (count < 20)
                 title = AffinityTitle.Lewd;
@@ -487,6 +506,14 @@ namespace NadekoBot.Modules.Gambling.Services
                 title = AffinityTitle.Harlot;
 
             return title.ToString().Replace('_', ' ');
+        }
+
+        public IReadOnlyList<WaifuItemModel> GetWaifuItems()
+        {
+            var conf = _gss.Data;
+            return _gss.Data.Waifu.Items
+                .Select(x => new WaifuItemModel(x.ItemEmoji, (int)(x.Price * conf.Waifu.Multipliers.AllGiftPrices), x.Name))
+                .ToList();
         }
     }
 }

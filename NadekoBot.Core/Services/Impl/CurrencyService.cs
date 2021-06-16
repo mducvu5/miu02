@@ -7,19 +7,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NadekoBot.Core.Modules.Gambling.Services;
 
 namespace NadekoBot.Core.Services
 {
     public class CurrencyService : ICurrencyService
     {
-        private readonly IBotConfigProvider _config;
         private readonly DbService _db;
+        private readonly GamblingConfigService _gss;
         private readonly IUser _bot;
 
-        public CurrencyService(IBotConfigProvider config, DbService db, DiscordSocketClient c)
+        public CurrencyService(DbService db, DiscordSocketClient c, GamblingConfigService gss)
         {
-            _config = config;
             _db = db;
+            _gss = gss;
             _bot = c.CurrentUser;
         }
 
@@ -76,11 +77,12 @@ namespace NadekoBot.Core.Services
             {
                 try
                 {
+                    var sign = _gss.Data.Currency.Sign;
                     await (await user.GetOrCreateDMChannelAsync())
                         .EmbedAsync(new EmbedBuilder()
                             .WithOkColor()
-                            .WithTitle($"Received {_config.BotConfig.CurrencySign}")
-                            .AddField("Amount", amount)
+                            .WithTitle($"Received Currency")
+                            .AddField("Amount", amount + _gss.Data.Currency.Sign)
                             .AddField("Reason", reason));
                 }
                 catch
@@ -107,6 +109,28 @@ namespace NadekoBot.Core.Services
                     // i have to prevent same user changing more than once as it will cause db error
                     if (userIdHashSet.Add(idArray[i]))
                         InternalChange(idArray[i], null, null, null, reasonArray[i], amountArray[i], gamble, uow);
+                }
+                await uow.SaveChangesAsync();
+            }
+        }
+        
+        public async Task RemoveBulkAsync(IEnumerable<ulong> userIds, IEnumerable<string> reasons, IEnumerable<long> amounts, bool gamble = false)
+        {
+            var idArray = userIds as ulong[] ?? userIds.ToArray();
+            var reasonArray = reasons as string[] ?? reasons.ToArray();
+            var amountArray = amounts as long[] ?? amounts.ToArray();
+
+            if (idArray.Length != reasonArray.Length || reasonArray.Length != amountArray.Length)
+                throw new ArgumentException("Cannot perform bulk operation. Arrays are not of equal length.");
+
+            var userIdHashSet = new HashSet<ulong>(idArray.Length);
+            using (var uow = _db.GetDbContext())
+            {
+                for (int i = 0; i < idArray.Length; i++)
+                {
+                    // i have to prevent same user changing more than once as it will cause db error
+                    if (userIdHashSet.Add(idArray[i]))
+                        InternalChange(idArray[i], null, null, null, reasonArray[i], -amountArray[i], gamble, uow);
                 }
                 await uow.SaveChangesAsync();
             }

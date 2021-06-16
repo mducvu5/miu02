@@ -16,7 +16,8 @@ using StackExchange.Redis;
 using Discord;
 using Discord.WebSocket;
 using NadekoBot.Common.Collections;
-using NLog;
+using NadekoBot.Common.Replacements;
+using Serilog;
 
 namespace NadekoBot.Modules.Searches.Services
 {
@@ -38,14 +39,12 @@ namespace NadekoBot.Modules.Searches.Services
 
         private readonly ConnectionMultiplexer _multi;
         private readonly IBotCredentials _creds;
-        private readonly Logger _log;
         private readonly Timer _notifCleanupTimer;
 
         public StreamNotificationService(DbService db, DiscordSocketClient client,
             IBotStrings strings, IDataCache cache, IBotCredentials creds, IHttpClientFactory httpFactory,
             NadekoBot bot)
         {
-            _log = LogManager.GetCurrentClassLogger();
             _db = db;
             _client = client;
             _strings = strings;
@@ -128,7 +127,7 @@ namespace NadekoBot.Modules.Searches.Services
                         {
                             foreach (var kvp in deleteGroups)
                             {
-                                _log.Info($"Deleting {kvp.Value.Count} {kvp.Key} streams because " +
+                                Log.Information($"Deleting {kvp.Value.Count} {kvp.Key} streams because " +
                                           $"they've been erroring for more than {errorLimit}: {string.Join(", ", kvp.Value)}");
 
                                 var toDelete = uow._context.Set<FollowedStream>()
@@ -146,8 +145,8 @@ namespace NadekoBot.Modules.Searches.Services
                     }
                     catch (Exception ex)
                     {
-                        _log.Error("Error cleaning up FollowedStreams");
-                        _log.Error(ex.ToString());
+                        Log.Error("Error cleaning up FollowedStreams");
+                        Log.Error(ex.ToString());
                     }
                 }, null, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
 
@@ -255,11 +254,20 @@ namespace NadekoBot.Modules.Searches.Services
                         .Select(fs =>
                         {
                             var textChannel = _client.GetGuild(fs.GuildId)?.GetTextChannel(fs.ChannelId);
+                            
                             if (textChannel is null)
                                 return Task.CompletedTask;
-                            return textChannel.EmbedAsync(
-                                GetEmbed(fs.GuildId, stream),
-                                msg: string.IsNullOrWhiteSpace(fs.Message) ? "" : fs.Message);
+                            
+                            var rep = new ReplacementBuilder()
+                                .WithOverride("%user%", () => fs.Username)
+                                .WithOverride("%platform%", () => fs.Type.ToString())
+                                .Build();
+                            
+                            var message = string.IsNullOrWhiteSpace(fs.Message)
+                                ? ""
+                                : rep.Replace(fs.Message);
+
+                            return textChannel.EmbedAsync(GetEmbed(fs.GuildId, stream), message);
                         });
 
                     await Task.WhenAll(sendTasks);
@@ -328,7 +336,7 @@ namespace NadekoBot.Modules.Searches.Services
 
         public int ClearAllStreams(ulong guildId)
         {
-            // todo clear streams
+            // todo future clear streams
             int count;
             using (var uow = _db.GetDbContext())
             {
@@ -548,6 +556,23 @@ namespace NadekoBot.Modules.Searches.Services
             }
 
             return true;
+        }
+
+        public int SetStreamMessageForAll(ulong guildId, string message)
+        {
+            using var uow = _db.GetDbContext();
+
+            var all = uow._context.Set<FollowedStream>()
+                .ToList();
+
+            if (all.Count == 0)
+                return 0;
+
+            all.ForEach(x => x.Message = message);
+
+            uow.SaveChanges();
+
+            return all.Count;
         }
     }
 }
