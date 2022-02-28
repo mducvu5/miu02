@@ -75,6 +75,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\ayu\Ayu.Discord.Voice\Ayu.Discord.Voice.csproj" />
+        <ProjectReference Include="..\Nadeko.Snake\Nadeko.Snake.csproj" />
         <ProjectReference Include="..\NadekoBot.Generators\NadekoBot.Generators.csproj" OutputItemType="Analyzer" />
     </ItemGroup>
 
@@ -94,6 +95,9 @@
         <None Update="creds_example.yml;data\images_backup.json;data\xp_template_backup.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="sneks\uwu" />
     </ItemGroup>
 
     <PropertyGroup Condition=" '$(Version)' == '' ">
