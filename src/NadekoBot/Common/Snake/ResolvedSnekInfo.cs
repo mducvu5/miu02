@@ -1,6 +1,5 @@
-﻿public class ResolvedSnekInfo
-{
-    public WeakReference<SnekAssemblyLoadContext> LoadContext { get; set; }
-    public SnekInfo SnekInfo { get; set; }
-    public ModuleInfo ModuleInfo { get; set; }
-}
+﻿public record ResolvedSnekInfo(
+    WeakReference<SnekAssemblyLoadContext> LoadContext,
+    IReadOnlyCollection<ModuleInfo> ModuleInfos,
+    IReadOnlyCollection<SnekData> SnekInfos
+);

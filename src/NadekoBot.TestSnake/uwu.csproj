@@ -3,8 +3,10 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>preview</LangVersion>
+        <EnablePreviewFeatures>true</EnablePreviewFeatures>
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\Nadeko.Snake\Nadeko.Snake.csproj" />
+      <ProjectReference Include="..\Nadeko.Snake\Nadeko.Snake.csproj" Private="false" />
     </ItemGroup>
 </Project>
