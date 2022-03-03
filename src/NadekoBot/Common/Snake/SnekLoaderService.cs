@@ -1,6 +1,7 @@
 ﻿using Discord.Commands.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using Nadeko.Snake;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -29,11 +30,31 @@ public class SnekLoaderService : ISnekLoaderService, INService
             var moduleInfos = new List<ModuleInfo>();
             foreach (var point in snekData)
             {
-                var module = await LoadModuleInternalAsync(point);
-                moduleInfos.Add(module);
+                try
+                {
+                    // initialize snek and subsneks
+                    await point.Instance.InitializeAsync();
+                    foreach (var sub in point.Submodules)
+                    {
+                        await sub.Instance.InitializeAsync();
+                    }
+
+                    var module = await LoadModuleInternalAsync(point);
+                    moduleInfos.Add(module);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex,
+                        "Error loading snek {SnekName} from {Path}",
+                        point.Name,
+                        path);
+                    continue;
+                }
             }
 
-            _loaded[name] = new(LoadContext: ctx, ModuleInfos: moduleInfos, SnekInfos: snekData);
+            _loaded[name] = new(LoadContext: ctx,
+                ModuleInfos: moduleInfos.ToImmutableArray(),
+                SnekInfos: snekData.ToImmutableArray());
             return true;
         }
         
@@ -46,16 +67,15 @@ public class SnekLoaderService : ISnekLoaderService, INService
         [NotNullWhen(true)] out IReadOnlyCollection<SnekData>? snekData
         )
     {
+        ctxWr = null;
+        snekData = null;
+        
         var ctx = new SnekAssemblyLoadContext();
         var a = ctx.LoadFromAssemblyPath(Path.GetFullPath(path));
-
         var sis = LoadSneksFromAssembly(a);
 
         if (sis.Count == 0)
         {
-            ctxWr = null;
-            snekData = null;
-            
             return false;
         }
 
@@ -181,6 +201,8 @@ public class SnekLoaderService : ISnekLoaderService, INService
             await _cmdService.RemoveModuleAsync(mi);
         }
 
+        await DisposeSnekInstances(lsi);
+
         var lc = lsi.LoadContext;
         
         // removing this line will prevent assembly from being unloaded quickly
@@ -188,6 +210,36 @@ public class SnekLoaderService : ISnekLoaderService, INService
         // due to how async works
         lsi = null;
         return UnloadInternal(lc);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private async Task DisposeSnekInstances(ResolvedSnekInfo snekInfos)
+    {
+        for (var index = 0; index < snekInfos.SnekInfos.Count; index++)
+        {
+            var si = snekInfos.SnekInfos[index];
+            try
+            {
+                await si.Instance.DisposeAsync();
+                for (var i = 0; i < si.Submodules.Count; i++)
+                {
+                    var sub = si.Submodules[i];
+                    await sub.Instance.DisposeAsync();
+        
+                    sub = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex,
+                    "Failed cleanup of Snek {SnekName}. This medusa might not unload correctly",
+                    si.Instance.Name);
+            }
+        
+            si = null;
+        }
+        
+        snekInfos = null;
     }
 
     // [MethodImpl(MethodImplOptions.NoInlining)]
@@ -293,6 +345,7 @@ public class SnekLoaderService : ISnekLoaderService, INService
                           .ToArray();
 
         var instance = (Snek)Activator.CreateInstance(type)!;
+        
         var module = new SnekData(instance.Name,
             parentData,
             instance,

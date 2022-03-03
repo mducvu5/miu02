@@ -9,37 +9,51 @@ namespace Nadeko.Snake;
 /// The classes will that inherit instantiated ONLY ONCE during the loading,
 /// and any commands will be executed on the same instance.
 /// </summary>
-public abstract class Snek
+public abstract class Snek : IAsyncDisposable
 {
-    public virtual string Name 
-        => GetType().Name.ToLowerInvariant(); 
-    
+    public virtual string Name
+        => GetType().Name.ToLowerInvariant();
+
     /// <summary>
     /// Called whenever on all received non-bot user messages
     /// </summary>
     /// <param name="msg">Received Message</param>
     /// <returns>Execution result</returns>
-    public virtual ValueTask<ExecResponse> OnMessage(IUserMessage msg) => ValueTask.FromResult<ExecResponse>(default);
-    
+    public virtual ValueTask<ExecResponse> OnMessageAsync(IUserMessage msg)
+        => ValueTask.FromResult<ExecResponse>(default);
+
     /// <summary>
     /// Called when ANY valid command (doesn't have to be from this snek) is about to be executed
     /// </summary>
     /// <param name="ctx">Context</param>
     /// <returns>Execution result</returns>
-    public virtual ValueTask<ExecResponse> OnPreCommand(AnyContext ctx) => ValueTask.FromResult<ExecResponse>(default);
-    
+    public virtual ValueTask<ExecResponse> OnPreCommandAsync(AnyContext ctx)
+        => ValueTask.FromResult<ExecResponse>(default);
+
     /// <summary>
     /// Called when ANY command (doesn't have to be from this snek) was executed
     /// </summary>
     /// <param name="ctx">Context</param>
     /// <returns>Execution result</returns>
-    public virtual ValueTask<ExecResponse> OnPostCommand(AnyContext ctx) => ValueTask.FromResult<ExecResponse>(default);
+    public virtual ValueTask<ExecResponse> OnPostCommandAsync(AnyContext ctx)
+        => ValueTask.FromResult<ExecResponse>(default);
+
+    /// <summary>
+    /// Executed once this snek has been instantiated and before any command is executed.
+    /// </summary>
+    /// <returns>A <see cref="ValueTask"/> representing completion</returns>
+    public virtual ValueTask InitializeAsync()
+        => default;
+
+    /// <summary>
+    /// Override to cleanup any resources or references which might hold this snek in memory
+    /// </summary>
+    /// <returns></returns>
+    public virtual ValueTask DisposeAsync()
+        => default;
 }
 
-[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
-public abstract class FilterAttribute : Attribute
+public readonly struct ExecResponse
 {
-    public abstract ValueTask<bool> CheckAsync(AnyContext ctx);
+    
 }
-
-public readonly record struct ExecResponse();

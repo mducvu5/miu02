@@ -19,6 +19,19 @@ public class Papa : Snek
         public override string Name
             => "uwu";
 
+
+        public override ValueTask InitializeAsync()
+        {
+            Console.WriteLine("initializing");
+            return default;
+        }
+
+        public override ValueTask DisposeAsync()
+        {
+            Console.WriteLine("Cleaning up");
+            return default;
+        }
+
         // public Uwu()
         // {
         //     _svc = new MyService();
@@ -39,22 +52,8 @@ public class Papa : Snek
         [Command]
         public async Task<int> Taskt(GuildContext ctx)
         {
-            await ctx.Channel.SendMessageAsync("Task");
+            await ctx.Channel.SendMessageAsync("Hello taskt");
             return 1;
-        }
-        
-        [Command]
-        public async ValueTask<int> valuetask(GuildContext ctx)
-        {
-            await ctx.Channel.SendMessageAsync("Task");
-            return 1;
-        }
-        
-        [Command]
-        public string arbitrarytype(GuildContext ctx)
-        {
-            Console.WriteLine("Arbitrary");
-            return "invalid";
         }
         
         [Command]

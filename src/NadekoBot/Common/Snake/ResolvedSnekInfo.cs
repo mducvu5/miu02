@@ -1,5 +1,7 @@
-﻿public record ResolvedSnekInfo(
+﻿using System.Collections.Immutable;
+
+public record ResolvedSnekInfo(
     WeakReference<SnekAssemblyLoadContext> LoadContext,
-    IReadOnlyCollection<ModuleInfo> ModuleInfos,
-    IReadOnlyCollection<SnekData> SnekInfos
+    IImmutableList<ModuleInfo> ModuleInfos,
+    IImmutableList<SnekData> SnekInfos
 );
