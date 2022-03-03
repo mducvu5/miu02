@@ -26,14 +26,24 @@ It is recommended that you use **Ubuntu 20.04**, as there have been nearly no pr
 
 ## Linux From Source 
 
-Open Terminal (if you're on an installation with a window manager) and navigate to the location where you want to install the bot (for example `cd ~`) 
+##### Migration from v3 -> v4
+
+Follow the following few steps only if you're migrating from v3. If not, skip to installation instructions.
+
+Use the new installer script:  `cd ~ && wget -N https://gitlab.com/Kwoth/nadeko-bash-installer/-/raw/v4/linuxAIO.sh && bash linuxAIO.sh`
+> - Install prerequisites (type `1` and press `enter`)
+> - Download (type `2` and press `enter`)
+> - Run (type `3` and press `enter`)
+> - Done
 
 ##### Installation Instructions
 
-1. Download and run the **new** installer script `cd ~ && wget -N https://gitlab.com/Kwoth/nadeko-bash-installer/-/raw/master/linuxAIO.sh && bash linuxAIO.sh`
+Open Terminal (if you're on an installation with a window manager) and navigate to the location where you want to install the bot (for example `cd ~`) 
+
+1. Download and run the **new** installer script `cd ~ && wget -N https://gitlab.com/Kwoth/nadeko-bash-installer/-/raw/v4/linuxAIO.sh && bash linuxAIO.sh`
 2. Install prerequisites (type `1` and press enter)
 3. Download the bot (type `2` and press enter)
-4. Exit the installer (type `5` and press enter)
+4. Exit the installer (type `6` and press enter)
 5. Copy the creds.yml template `cp nadekobot/output/creds_example.yml nadekobot/output/creds.yml` 
 6. Open `nadekobot/output/creds.yml` with your favorite text editor. We will use nano here
     - `nano nadekobot/output/creds.yml`
@@ -42,12 +52,13 @@ Open Terminal (if you're on an installation with a window manager) and navigate 
        - `CTRL` + `X`
        - `Y`
        - `Enter`
-8. Run the bot (type `3` and press enter)
+8. Run the installer script again `cd ~ && wget -N https://gitlab.com/Kwoth/nadeko-bash-installer/-/raw/v4/linuxAIO.sh && bash linuxAIO.sh`
+9. Run the bot (type `3` and press enter)
 
 ##### Source Update Instructions
 
 1. ⚠ Stop the bot ⚠
-2. Update and run the **new** installer script `cd ~ && wget -N https://gitlab.com/Kwoth/nadeko-bash-installer/-/raw/master/linuxAIO.sh && bash linuxAIO.sh`
+2. Update and run the **new** installer script `cd ~ && wget -N https://gitlab.com/Kwoth/nadeko-bash-installer/-/raw/v4/linuxAIO.sh && bash linuxAIO.sh`
 3. Update the bot (type `2` and press enter)
 4. Run the bot (type `3` and press enter)
 5. 🎉 

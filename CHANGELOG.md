@@ -5,6 +5,15 @@ Experimental changelog. Mostly based on [keepachangelog](https://keepachangelog.
 
 ## Unreleased
 
+- More cool stuff coming soon
+
+## [4.0.1] - 03.03.2022
+
+- Added `usePrivilegedIntents` to creds.yml if you don't have or don't want (?) to use them
+- Added a human-readable, detailed error message if logging in fails due to missing privileged intents
+
+## [4.0.0] - 02.03.2022
+
 ### Added
 - Added `.deleteemptyservers` command
 - Added `.curtr <id>` which lets you see full information about one of your own transactions with the specified id
