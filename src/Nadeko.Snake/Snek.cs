@@ -11,8 +11,19 @@ namespace Nadeko.Snake;
 /// </summary>
 public abstract class Snek : IAsyncDisposable
 {
+    /// <summary>
+    /// Name of the snek. Defaults to 
+    /// </summary>
     public virtual string Name
         => GetType().Name.ToLowerInvariant();
+
+    /// <summary>
+    /// The prefix required before the command name. For example
+    /// if you set this to 'test' then a command called 'cmd' will have to be invoked by using
+    /// '.test cmd' instead of `.cmd` 
+    /// </summary>
+    public virtual string? Prefix
+        => null;
 
     /// <summary>
     /// Called whenever on all received non-bot user messages
