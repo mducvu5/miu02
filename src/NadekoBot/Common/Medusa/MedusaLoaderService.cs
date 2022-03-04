@@ -7,13 +7,14 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using PriorityAttribute = Nadeko.Snake.PriorityAttribute;
 
-public class SnekLoaderService : ISnekLoaderService, INService
+public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 {
     private readonly CommandService _cmdService;
-    private readonly Dictionary<string, ResolvedSnekInfo> _loaded = new();
+    private readonly Dictionary<string, ResolvedMedusa> _loaded = new();
+    private readonly IServiceProvider _svcs;
 
-    public SnekLoaderService(CommandService cmdService)
-        => _cmdService = cmdService;
+    public MedusaLoaderService(CommandService cmdService, IServiceProvider svcs)
+        => (_cmdService, _svcs) = (cmdService, svcs);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public async Task<bool> LoadSnekAsync(string name)
@@ -22,7 +23,7 @@ public class SnekLoaderService : ISnekLoaderService, INService
             return false;
         
         var safeName = Uri.EscapeDataString(name);
-        var path = $"sneks/{safeName}/{safeName}.dll";
+        var path = $"medusae/{safeName}/{safeName}.dll";
         name = name.ToLowerInvariant();
         
         if (LoadAssemblyInternal(path, out var ctx, out var snekData))
@@ -63,14 +64,14 @@ public class SnekLoaderService : ISnekLoaderService, INService
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private bool LoadAssemblyInternal(string path, 
-        [NotNullWhen(true)] out WeakReference<SnekAssemblyLoadContext>? ctxWr,
+        [NotNullWhen(true)] out WeakReference<MedusaAssemblyLoadContext>? ctxWr,
         [NotNullWhen(true)] out IReadOnlyCollection<SnekData>? snekData
         )
     {
         ctxWr = null;
         snekData = null;
         
-        var ctx = new SnekAssemblyLoadContext();
+        var ctx = new MedusaAssemblyLoadContext(Path.GetDirectoryName(path)!);
         var a = ctx.LoadFromAssemblyPath(Path.GetFullPath(path));
         var sis = LoadSneksFromAssembly(a);
 
@@ -88,7 +89,7 @@ public class SnekLoaderService : ISnekLoaderService, INService
     [MethodImpl(MethodImplOptions.NoInlining)]
     private async Task<ModuleInfo> LoadModuleInternalAsync(SnekData snekInfo)
     {
-        var module = await _cmdService.CreateModuleAsync(string.Empty,
+        var module = await _cmdService.CreateModuleAsync(snekInfo.Instance.Prefix,
             CreateModuleFactory(snekInfo));
         
         return module;
@@ -107,7 +108,7 @@ public class SnekLoaderService : ISnekLoaderService, INService
             }
 
             foreach (var subInfo in snekInfo.Submodules)
-                m.AddModule(string.Empty, CreateModuleFactory(subInfo));
+                m.AddModule(subInfo.Instance.Prefix, CreateModuleFactory(subInfo));
         };
 
     private static readonly RequireContextAttribute _reqGuild = new RequireContextAttribute(ContextType.Guild);
@@ -213,11 +214,11 @@ public class SnekLoaderService : ISnekLoaderService, INService
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private async Task DisposeSnekInstances(ResolvedSnekInfo snekInfos)
+    private async Task DisposeSnekInstances(ResolvedMedusa medusae)
     {
-        for (var index = 0; index < snekInfos.SnekInfos.Count; index++)
+        for (var index = 0; index < medusae.SnekInfos.Count; index++)
         {
-            var si = snekInfos.SnekInfos[index];
+            var si = medusae.SnekInfos[index];
             try
             {
                 await si.Instance.DisposeAsync();
@@ -236,10 +237,10 @@ public class SnekLoaderService : ISnekLoaderService, INService
                     si.Instance.Name);
             }
         
-            si = null;
+            // si = null;
         }
         
-        snekInfos = null;
+        // medusae = null;
     }
 
     // [MethodImpl(MethodImplOptions.NoInlining)]
@@ -265,7 +266,7 @@ public class SnekLoaderService : ISnekLoaderService, INService
     //     si.Submodules.TrimExcess();
     // }
 
-    private bool UnloadInternal(WeakReference<SnekAssemblyLoadContext> lsi)
+    private bool UnloadInternal(WeakReference<MedusaAssemblyLoadContext> lsi)
     {
         UnloadContext(lsi);
         GcCleanup();
@@ -274,7 +275,7 @@ public class SnekLoaderService : ISnekLoaderService, INService
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void UnloadContext(WeakReference<SnekAssemblyLoadContext> lsiLoadContext)
+    private void UnloadContext(WeakReference<MedusaAssemblyLoadContext> lsiLoadContext)
     {
         if(lsiLoadContext.TryGetTarget(out var ctx))
             ctx.Unload();
@@ -290,8 +291,8 @@ public class SnekLoaderService : ISnekLoaderService, INService
         }
     }
 
-    private static readonly Type _snekType = typeof(Snek);  
-    
+    private static readonly Type _snekType = typeof(Snek);
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public IReadOnlyCollection<SnekData> LoadSneksFromAssembly(Assembly a)
     {
@@ -344,7 +345,7 @@ public class SnekLoaderService : ISnekLoaderService, INService
         var filters = type.GetCustomAttributes<FilterAttribute>(true)
                           .ToArray();
 
-        var instance = (Snek)Activator.CreateInstance(type)!;
+        var instance = (Snek)ActivatorUtilities.CreateInstance(_svcs, type)!;
         
         var module = new SnekData(instance.Name,
             parentData,
@@ -414,7 +415,7 @@ public class SnekLoaderService : ISnekLoaderService, INService
             {
                 var pi = paramInfos[paramCounter];
 
-                var paramName = pi.Name;
+                var paramName = pi.Name ?? "unnamed";
                 var isContext = paramCounter == 0 && pi.ParameterType.IsAssignableTo(typeof(AnyContext));
 
                 var leftoverAttribute = pi.GetCustomAttribute<Nadeko.Snake.LeftoverAttribute>();

@@ -22,8 +22,8 @@ public abstract class Snek : IAsyncDisposable
     /// if you set this to 'test' then a command called 'cmd' will have to be invoked by using
     /// '.test cmd' instead of `.cmd` 
     /// </summary>
-    public virtual string? Prefix
-        => null;
+    public virtual string Prefix
+        => string.Empty;
 
     /// <summary>
     /// Called whenever on all received non-bot user messages

@@ -1,6 +1,6 @@
 ﻿namespace NadekoBot.Modules;
 
-public partial class Sneks : NadekoModule<ISnekLoaderService>
+public partial class Medusae : NadekoModule<IMedusaLoaderService>
 {
     [Cmd]
     public async partial Task Load(string name)
