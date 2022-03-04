@@ -7,6 +7,10 @@ Experimental changelog. Mostly based on [keepachangelog](https://keepachangelog.
 
 - More cool stuff coming soon
 
+## [4.0.2] - 03.03.2022
+
+- Fixed `.rero` not working due to a bug introduced in 4.0
+
 ## [4.0.1] - 03.03.2022
 
 - Added `usePrivilegedIntents` to creds.yml if you don't have or don't want (?) to use them
@@ -52,6 +56,7 @@ Experimental changelog. Mostly based on [keepachangelog](https://keepachangelog.
 - [dev] Moved FilterWordsChannelId to a separate table
 
 ### Fixed
+- Fixed twitch stream notifications (rewrote it to use the new api)
 - Fixed an extra whitespace in usage part of command help if the command has no arguments
 - Possible small fix for `.prune` ratelimiting
 - `.gvc` should now properly trigger when a user is already in a gvc and changes his activity
