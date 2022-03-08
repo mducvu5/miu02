@@ -1,4 +1,5 @@
-﻿using Nadeko.Snake;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Nadeko.Snake;
 
 public sealed record SnekData(
     string Name,

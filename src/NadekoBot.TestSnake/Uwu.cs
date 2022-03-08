@@ -1,28 +1,91 @@
 ﻿using Discord;
 using Nadeko.Snake;
+using NadekoBot.Services;
+using Serilog;
+using StackExchange.Redis;
 
 namespace NadekoBot.TestSnake;
+
+[Service(Lifetime.Transient)]
+public class SewuisTransient
+{
+    private readonly SewuisSingleton _sin;
+
+    public SewuisTransient(SewuisSingleton sin)
+    {
+        _sin = sin;
+        Console.WriteLine("instantiated transient services!! Reloaded");
+    }
+
+    public string Tra()
+    {
+        Log.Information("tra");
+
+        return $"tra_{_sin.Sin()}";
+    }
+}
+
+[Service(Lifetime.Singleton)]
+public class SewuisSingleton
+{
+    public SewuisSingleton()
+    {
+        Console.WriteLine("instantiated singleton service");
+    }
+
+    public string Sin()
+    {
+        Log.Information("Sin");
+        return "sin";
+    }
+}
 
 public class Papa : Snek
 {
     public override string Name
         => "papa";
 
-    [Command()]
-    public Task Out()
-        => Task.CompletedTask;
+    [Command]
+    public Task Stats(GuildContext ctx, int x)
+        => ctx.Channel.SendMessageAsync($"This is my own stats {x}");
+
+    [Command]
+    public async Task Singleton(GuildContext ctx, [Inject] SewuisSingleton sin)
+    {
+        sin.Sin();
+        await ctx.Channel.SendMessageAsync("ok");
+    }
+    
+    [Command]
+    public async Task Transient(GuildContext ctx, [Inject] SewuisTransient tra)
+    {
+        tra.Tra();
+        await ctx.Channel.SendMessageAsync("ok");
+    }
 
     public class Uwu : Snek
     {
+        private readonly IStatsService _stats;
+
+        private readonly ConnectionMultiplexer _multi;
         // private readonly MyService _svc;
 
         public override string Name
             => "uwu";
 
+        public override string Prefix
+            => "uwu";
+
+        public Uwu(IStatsService stats, ConnectionMultiplexer multi)
+        {
+            _stats = stats;
+            _multi = multi;
+        }
 
         public override ValueTask InitializeAsync()
         {
-            Console.WriteLine("initializing");
+            Console.WriteLine(typeof(Scrutor.IAssemblySelector).Assembly);
+            // Console.WriteLine(typeof(Ayu.Discord.Gateway.CloseCodes));
             return default;
         }
 
@@ -32,9 +95,27 @@ public class Papa : Snek
             return default;
         }
 
-        // public Uwu()
+        [Command]
+        public async Task Stats(GuildContext ctx)
+        {
+            await ctx.Channel.SendMessageAsync(
+                $"I'm using IStatsService!, Here's the current uptime: {_stats.GetUptimeString()}");
+        }
+
+        // [Command]
+        // public async Task Services(
+        //     GuildContext ctx,
+        //     [Inject] SewuisSingleton ss,
+        //     [Inject] SewuisTransient st,
+        //     int a,
+        //     int b
+        // )
         // {
-        //     _svc = new MyService();
+        //     ss.Sin();
+        //     Console.WriteLine("---");
+        //     st.Tra();
+        //     
+        //     await ctx.Channel.SendMessageAsync("owo " + a + b);
         // }
 
         [Command]
@@ -74,9 +155,10 @@ IGuildUser c = {c}");
 
         [Command]
         [Priority(1)]
-        public async Task Noctx()
+        public ValueTask Noctx()
         {
             Console.WriteLine("No context");
+            return default;
         }
 
         [Command("al", "ali", "alia")]
@@ -89,7 +171,7 @@ IGuildUser c = {c}");
         [Priority(1)]
         public async Task Ctx(GuildContext ctx)
         {
-            await ctx.Channel.SendMessageAsync($"Server context {ctx.Guild.Name}");
+            await ctx.Channel.SendMessageAsync($"Server context {ctx.Guild.Name}! Improved!!!");
         }
 
         [Command("ctx")]

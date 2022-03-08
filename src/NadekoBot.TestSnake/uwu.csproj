@@ -1,12 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>        
+        <Nullable>enable</Nullable>        
         <LangVersion>preview</LangVersion>
-        <EnablePreviewFeatures>true</EnablePreviewFeatures>
+        <EnablePreviewFeatures>true</EnablePreviewFeatures>        
+        <EnableDynamicLoading>true</EnableDynamicLoading>
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\Nadeko.Snake\Nadeko.Snake.csproj" Private="false" />
+      <ProjectReference Include="..\Nadeko.Snake\Nadeko.Snake.csproj">
+          <Private>false</Private>
+          <ExcludeAssets>runtime</ExcludeAssets>
+      </ProjectReference>
+      <ProjectReference Include="..\NadekoBot\NadekoBot.csproj">
+          <Private>false</Private>
+          <!-- Added native exclusion to prevent entityframeworkcore.sqlite package from outputting runtimes/ folder -->
+          <ExcludeAssets>runtime; native</ExcludeAssets>
+      </ProjectReference>
     </ItemGroup>
 </Project>

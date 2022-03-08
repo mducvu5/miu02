@@ -1,14 +1,17 @@
 ﻿using Nadeko.Snake;
+using System.Collections.Immutable;
 using System.Reflection;
 
 public sealed class SnekCommandData
 {
-    public SnekCommandData(IReadOnlyCollection<string> aliases,
+    public SnekCommandData(
+        IReadOnlyCollection<string> aliases,
         MethodInfo methodInfo,
         Snek module,
         FilterAttribute[] filters,
         CommandContextType contextType,
-        IReadOnlyCollection<ParamData> parameters,
+        IReadOnlyList<Type> injectedParams,
+        IReadOnlyList<ParamData> parameters,
         int priority)
     {
         Aliases = aliases;
@@ -16,6 +19,7 @@ public sealed class SnekCommandData
         Module = module;
         Filters = filters;
         ContextType = contextType;
+        InjectedParams = injectedParams;
         Parameters = parameters;
         Priority = priority;
     }
@@ -25,6 +29,7 @@ public sealed class SnekCommandData
     public Snek Module { get; set; }
     public FilterAttribute[] Filters { get; set; }
     public CommandContextType ContextType { get; }
-    public IReadOnlyCollection<ParamData> Parameters { get; }
+    public IReadOnlyList<Type> InjectedParams { get; }
+    public IReadOnlyList<ParamData> Parameters { get; }
     public int Priority { get; }
 }

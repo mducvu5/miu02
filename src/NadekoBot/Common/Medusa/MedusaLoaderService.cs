@@ -1,6 +1,7 @@
 ﻿using Discord.Commands.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using Nadeko.Snake;
+using NadekoBot.Common.Medusa;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -10,11 +11,14 @@ using PriorityAttribute = Nadeko.Snake.PriorityAttribute;
 public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 {
     private readonly CommandService _cmdService;
-    private readonly Dictionary<string, ResolvedMedusa> _loaded = new();
     private readonly IServiceProvider _svcs;
+    private readonly Dictionary<string, ResolvedMedusa> _loaded = new();
 
     public MedusaLoaderService(CommandService cmdService, IServiceProvider svcs)
-        => (_cmdService, _svcs) = (cmdService, svcs);
+    {
+        _cmdService = cmdService;
+        _svcs = svcs;
+    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public async Task<bool> LoadSnekAsync(string name)
@@ -26,7 +30,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         var path = $"medusae/{safeName}/{safeName}.dll";
         name = name.ToLowerInvariant();
         
-        if (LoadAssemblyInternal(path, out var ctx, out var snekData))
+        if (LoadAssemblyInternal(path, out var ctx, out var snekData, out var services))
         {
             var moduleInfos = new List<ModuleInfo>();
             foreach (var point in snekData)
@@ -40,7 +44,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                         await sub.Instance.InitializeAsync();
                     }
 
-                    var module = await LoadModuleInternalAsync(point);
+                    var module = await LoadModuleInternalAsync(point, services);
                     moduleInfos.Add(module);
                 }
                 catch (Exception ex)
@@ -49,13 +53,19 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                         "Error loading snek {SnekName} from {Path}",
                         point.Name,
                         path);
+                    
                     continue;
                 }
             }
 
             _loaded[name] = new(LoadContext: ctx,
                 ModuleInfos: moduleInfos.ToImmutableArray(),
-                SnekInfos: snekData.ToImmutableArray());
+                SnekInfos: snekData.ToImmutableArray())
+            {
+                Services = services
+            };
+
+            services = null;
             return true;
         }
         
@@ -65,15 +75,15 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     [MethodImpl(MethodImplOptions.NoInlining)]
     private bool LoadAssemblyInternal(string path, 
         [NotNullWhen(true)] out WeakReference<MedusaAssemblyLoadContext>? ctxWr,
-        [NotNullWhen(true)] out IReadOnlyCollection<SnekData>? snekData
-        )
+        [NotNullWhen(true)] out IReadOnlyCollection<SnekData>? snekData,
+        out IServiceProvider services)
     {
         ctxWr = null;
         snekData = null;
         
         var ctx = new MedusaAssemblyLoadContext(Path.GetDirectoryName(path)!);
         var a = ctx.LoadFromAssemblyPath(Path.GetFullPath(path));
-        var sis = LoadSneksFromAssembly(a);
+        var sis = LoadSneksFromAssembly(a, out services);
 
         if (sis.Count == 0)
         {
@@ -87,15 +97,16 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     }
     
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private async Task<ModuleInfo> LoadModuleInternalAsync(SnekData snekInfo)
+    private async Task<ModuleInfo> LoadModuleInternalAsync(SnekData snekInfo, IServiceProvider services)
     {
         var module = await _cmdService.CreateModuleAsync(snekInfo.Instance.Prefix,
-            CreateModuleFactory(snekInfo));
+            CreateModuleFactory(snekInfo, services));
         
         return module;
     }
 
-    private Action<ModuleBuilder> CreateModuleFactory(SnekData snekInfo)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private Action<ModuleBuilder> CreateModuleFactory(SnekData snekInfo, IServiceProvider medusaServices)
         => mb =>
         {
             var m = mb.WithName(snekInfo.Name);
@@ -103,12 +114,15 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
             foreach (var cmd in snekInfo.Commands)
             {
                 m.AddCommand(cmd.Aliases.First(),
-                    CreateCallback(new(cmd.MethodInfo), cmd.ContextType, new(snekInfo.Instance)),
+                    CreateCallback(cmd.ContextType,
+                        new(snekInfo),
+                        new(cmd), 
+                        new(medusaServices)),
                     CreateCommandFactory(cmd));
             }
 
             foreach (var subInfo in snekInfo.Submodules)
-                m.AddModule(subInfo.Instance.Prefix, CreateModuleFactory(subInfo));
+                m.AddModule(subInfo.Instance.Prefix, CreateModuleFactory(subInfo, medusaServices));
         };
 
     private static readonly RequireContextAttribute _reqGuild = new RequireContextAttribute(ContextType.Guild);
@@ -145,51 +159,98 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private Func<ICommandContext, object[], IServiceProvider, CommandInfo, Task> CreateCallback(
-        WeakReference<MethodInfo> methodInfoWr,
         CommandContextType contextType,
-        WeakReference<Snek> snekInstance)
+        WeakReference<SnekData> snekDataWr,
+        WeakReference<SnekCommandData> snekCommandDataWr,
+        WeakReference<IServiceProvider> medusaServicesWr)
         => async (context, parameters, svcs, _) =>
         {
-            if (!methodInfoWr.TryGetTarget(out var methodInfo) || !snekInstance.TryGetTarget(out var snek))
+            if (!snekCommandDataWr.TryGetTarget(out var cmdData)
+                || !snekDataWr.TryGetTarget(out var snekData)
+                || !medusaServicesWr.TryGetTarget(out var medusaServices))
             {
                 Log.Warning("Attempted to run an unloaded snek's command");
                 return;
             }
                 
-            var offset = contextType == CommandContextType.Unspecified ? 0 : 1;
-            var paramObjs = parameters;
+            var paramObjs = ParamObjs(contextType, cmdData, parameters, context, svcs, medusaServices);
 
-            if (offset == 1)
+            try
             {
-                paramObjs = new object[parameters.Length + offset];
-
-                paramObjs[0] = context.Guild is null
-                    ? new DmContextAdapter(context)
-                    : new GuildContextAdapter(context);
-                
-                for (var i = 0; i < parameters.Length; i++)
+                var methodInfo = cmdData.MethodInfo;
+                if (methodInfo.ReturnType == typeof(Task)
+                    || (methodInfo.ReturnType.IsGenericType
+                        && methodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)))
                 {
-                    paramObjs[i + offset] = parameters[i];
+                    await (Task)methodInfo.Invoke(snekData.Instance, paramObjs)!;
+                }
+                else if (methodInfo.ReturnType == typeof(ValueTask))
+                {
+                    await ((ValueTask)methodInfo.Invoke(snekData.Instance, paramObjs)!).AsTask();
+                }
+                else // if (methodInfo.ReturnType == typeof(void))
+                {
+                    methodInfo.Invoke(snekData.Instance, paramObjs);
                 }
             }
-
-            using var scope = svcs.CreateScope();
-            if (methodInfo.ReturnType == typeof(Task)
-                || (methodInfo.ReturnType.IsGenericType
-                    && methodInfo.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)))
+            finally
             {
-                await (Task)methodInfo.Invoke(snek, paramObjs)!;
-            }
-            else if (methodInfo.ReturnType == typeof(ValueTask))
-            {
-                await (ValueTask)methodInfo.Invoke(snek, paramObjs)!;
-            }
-            else if (methodInfo.ReturnType == typeof(void))
-            {
-                methodInfo.Invoke(snek, paramObjs);
+                paramObjs = null;
+                cmdData = null;
+                snekData = null;
+                medusaServices = null;
             }
         };
-    
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static object[] ParamObjs(
+        CommandContextType contextType,
+        SnekCommandData cmdData,
+        object[] parameters,
+        ICommandContext context,
+        IServiceProvider svcs,
+        IServiceProvider medusaServices)
+    {
+        var extraParams = contextType == CommandContextType.Unspecified ? 0 : 1;
+        extraParams += cmdData.InjectedParams.Count;
+
+        var paramObjs = new object[parameters.Length + extraParams];
+
+        var startAt = 0;
+        if (contextType != CommandContextType.Unspecified)
+        {
+            paramObjs[0] = context.Guild is null
+                ? new DmContextAdapter(context)
+                : new GuildContextAdapter(context);
+
+            startAt = 1;
+        }
+
+        var svcProvider = new MedusaServiceProvider(
+            svcs,
+            new(medusaServices)
+        );
+
+        for (var i = 0; i < cmdData.InjectedParams.Count; i++)
+        {
+            var svc = svcProvider.GetService(cmdData.InjectedParams[i]);
+            if (svc is null)
+            {
+                throw new ArgumentException($"Cannot inject a service of type {cmdData.InjectedParams[i]}");
+            }
+
+            paramObjs[i + startAt] = svc;
+
+            svc = null;
+        }
+
+        startAt += cmdData.InjectedParams.Count;
+
+        for (var i = 0; i < parameters.Length; i++)
+            paramObjs[startAt + i] = parameters[i];
+        return paramObjs;
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public async Task<bool> UnloadSnekAsync(string name)
     {
@@ -209,6 +270,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         // removing this line will prevent assembly from being unloaded quickly
         // as this local variable will be held for a long time potentially
         // due to how async works
+        // await lsi.Services.DisposeAsync();
+        lsi.Services = null!;
         lsi = null;
         return UnloadInternal(lc);
     }
@@ -216,19 +279,15 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     [MethodImpl(MethodImplOptions.NoInlining)]
     private async Task DisposeSnekInstances(ResolvedMedusa medusae)
     {
-        for (var index = 0; index < medusae.SnekInfos.Count; index++)
+        foreach (var si in medusae.SnekInfos)
         {
-            var si = medusae.SnekInfos[index];
             try
             {
                 await si.Instance.DisposeAsync();
-                for (var i = 0; i < si.Submodules.Count; i++)
+                foreach (var sub in si.Submodules)
                 {
-                    var sub = si.Submodules[i];
                     await sub.Instance.DisposeAsync();
-        
-                    sub = null;
-                }
+                }  
             }
             catch (Exception ex)
             {
@@ -236,10 +295,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                     "Failed cleanup of Snek {SnekName}. This medusa might not unload correctly",
                     si.Instance.Name);
             }
-        
-            // si = null;
         }
-        
+
         // medusae = null;
     }
 
@@ -288,14 +345,61 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
+            GC.WaitForFullGCComplete();
+            GC.Collect();
         }
     }
 
     private static readonly Type _snekType = typeof(Snek);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public IReadOnlyCollection<SnekData> LoadSneksFromAssembly(Assembly a)
+    private IServiceProvider LoadMedusaServicesInternal(Assembly a)
+        => new ServiceCollection()
+           .Scan(x => x.FromAssemblies(a)
+                       .AddClasses(static x => x.WithAttribute<ServiceAttribute>(x => x.Lifetime == Lifetime.Transient))
+                       .AsSelfWithInterfaces()
+                       .WithTransientLifetime()
+                       .AddClasses(static x => x.WithAttribute<ServiceAttribute>(x => x.Lifetime == Lifetime.Singleton))
+                       .AsSelfWithInterfaces()
+                       .WithSingletonLifetime())
+           .BuildServiceProvider();
+    // => new ServiceCollection()
+    // {
+        // var builder = new ContainerBuilder();
+        // builder
+        //     .RegisterAssemblyTypes(a)
+        //     .PublicOnly()
+        //     .Where(x => x.GetCustomAttribute<ServiceAttribute>()?.Lifetime == Lifetime.Singleton)
+        //     .AsSelf()
+        //     .AsImplementedInterfaces()
+        //     .SingleInstance();
+        //
+        //
+        // builder
+        //     .RegisterAssemblyTypes(a)
+        //     .PublicOnly()
+        //     .Where(x => x.GetCustomAttribute<ServiceAttribute>()?.Lifetime == Lifetime.Transient)
+        //     .AsSelf()
+        //     .AsImplementedInterfaces()
+        //     .InstancePerDependency();
+
+        // builder
+        //     .RegisterAssemblyTypes(a)
+        //     .PublicOnly()
+        //     .Where(x => x.GetCustomAttribute<ServiceAttribute>()?.Lifetime == Lifetime.Singleton)
+        //     .AsSelf()
+        //     .AsImplementedInterfaces()
+        //     .SingleInstance();
+
+    //     return builder.Build();
+    // }
+
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public IReadOnlyCollection<SnekData> LoadSneksFromAssembly(Assembly a, out IServiceProvider services)
     {
+        services = LoadMedusaServicesInternal(a);
+        
         // find all types in teh assembly
         var types = a.GetExportedTypes();
         // module is always a public non abstract class
@@ -308,14 +412,14 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 
         var topModules = new Dictionary<Type, SnekData>();
         
-        foreach (var c in classes)
+        foreach (var cl in classes)
         {
-            if (c.DeclaringType is not null)
+            if (cl.DeclaringType is not null)
                 continue;
             
             // get module data, and add it to the topModules dictionary
-            var module = GetModuleData(c);
-            topModules.Add(c, module);
+            var module = GetModuleData(cl, services);
+            topModules.Add(cl, module);
         }
 
         foreach (var c in classes)
@@ -333,19 +437,19 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                 continue;
             }
             
-            GetModuleData(c, parentData);
+            GetModuleData(c, services, parentData);
         }
 
         return topModules.Values.ToArray();
     }
     
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private SnekData GetModuleData(Type type, SnekData? parentData = null)
+    private SnekData GetModuleData(Type type, IServiceProvider medusaServices, SnekData? parentData = null)
     {
         var filters = type.GetCustomAttributes<FilterAttribute>(true)
                           .ToArray();
-
-        var instance = (Snek)ActivatorUtilities.CreateInstance(_svcs, type)!;
+        
+        var instance = (Snek)ActivatorUtilities.CreateInstance(new MedusaServiceProvider(_svcs, new(medusaServices)), type)!;
         
         var module = new SnekData(instance.Name,
             parentData,
@@ -410,7 +514,9 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 
             var paramInfos = method.GetParameters();
             var cmdParams = new List<ParamData>();
+            var diParams = new List<Type>();
             var cmdContext = CommandContextType.Unspecified;
+            var canInject = false;
             for (var paramCounter = 0; paramCounter < paramInfos.Length; paramCounter++)
             {
                 var pi = paramInfos[paramCounter];
@@ -418,17 +524,23 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                 var paramName = pi.Name ?? "unnamed";
                 var isContext = paramCounter == 0 && pi.ParameterType.IsAssignableTo(typeof(AnyContext));
 
-                var leftoverAttribute = pi.GetCustomAttribute<Nadeko.Snake.LeftoverAttribute>();
+                var leftoverAttribute = pi.GetCustomAttribute<Nadeko.Snake.LeftoverAttribute>(true);
                 var hasDefaultValue = pi.HasDefaultValue;
                 var isLeftover = leftoverAttribute != null;
-                var isParams = pi.GetCustomAttribute<ParamArrayAttribute>() != null;
+                var isParams = pi.GetCustomAttribute<ParamArrayAttribute>() is not null;
                 var paramType = pi.ParameterType;
+                var isInjected = pi.GetCustomAttribute<InjectAttribute>(true) is not null;
 
                 if (isContext)
                 {
                     if (hasDefaultValue || leftoverAttribute != null || isParams)
                         throw new ArgumentException("IContext parameter cannot be optional, leftover, constant or params. " + GetErrorPath(method, pi));
 
+                    if (paramCounter != 0)
+                        throw new ArgumentException($"IContext parameter has to be first. {GetErrorPath(method, pi)}");
+
+                    canInject = true;
+                    
                     if (paramType.IsAssignableTo(typeof(GuildContext)))
                         cmdContext = CommandContextType.Guild;
                     else if (paramType.IsAssignableTo(typeof(DmContext)))
@@ -438,6 +550,19 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                     
                     continue;
                 }
+
+                if (isInjected)
+                {
+                    if (!canInject && paramCounter != 0)
+                        throw new ArgumentException($"Parameters marked as [Injected] have to come after IContext");
+
+                    canInject = true;
+                    
+                    diParams.Add(paramType);
+                    continue;
+                }
+
+                canInject = false;
 
                 if (isParams)
                 {
@@ -472,6 +597,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                 instance,
                 filters,
                 cmdContext,
+                diParams,
                 cmdParams,
                 prio
             ));

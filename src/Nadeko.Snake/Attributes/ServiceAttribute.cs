@@ -1,6 +1,17 @@
-﻿namespace Nadeko.Snake.Attributes;
+﻿namespace Nadeko.Snake;
 
-public class ServiceAttribute
+[AttributeUsage(AttributeTargets.Class)]
+public class ServiceAttribute : Attribute
 {
-    
+    public Lifetime Lifetime { get; }
+    public ServiceAttribute(Lifetime lifetime = Lifetime.Singleton)
+    {
+        Lifetime = lifetime;
+    }
+}
+
+public enum Lifetime
+{
+    Singleton,
+    Transient
 }

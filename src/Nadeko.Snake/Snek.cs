@@ -1,8 +1,7 @@
 ﻿using Discord;
 
 namespace Nadeko.Snake;
-
-// todo sneks/sneks.yml
+// todo medusae/medusae.yml
 
 /// <summary>
 /// Any snek has to inherit from this class.
