@@ -1,11 +1,11 @@
 ﻿namespace Nadeko.Snake;
 
 [AttributeUsage(AttributeTargets.Method)]
-public class Command : Attribute
+public class cmdAttribute : Attribute
 {
     public string[] Aliases { get; }
 
-    public Command(params string[] aliases)
+    public cmdAttribute(params string[] aliases)
     {
         Aliases = aliases;
     }

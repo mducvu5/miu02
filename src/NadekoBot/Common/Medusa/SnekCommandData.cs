@@ -1,6 +1,4 @@
-﻿using Nadeko.Snake;
-using System.Collections.Immutable;
-using System.Reflection;
+﻿using System.Reflection;
 
 public sealed class SnekCommandData
 {

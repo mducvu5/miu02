@@ -18,4 +18,12 @@
           <ExcludeAssets>runtime; native</ExcludeAssets>
       </ProjectReference>
     </ItemGroup>
+    <ItemGroup>
+      <None Update="res.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+        <None Update="strings/**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 </Project>

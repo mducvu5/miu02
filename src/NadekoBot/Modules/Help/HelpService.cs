@@ -12,19 +12,25 @@ public class HelpService : ILateExecutor, INService
     private readonly DiscordPermOverrideService _dpos;
     private readonly BotConfigService _bss;
     private readonly IEmbedBuilderService _eb;
+    private readonly ILocalization _loc;
+    private readonly IMedusaLoaderService _medusae;
 
     public HelpService(
         CommandHandler ch,
         IBotStrings strings,
         DiscordPermOverrideService dpos,
         BotConfigService bss,
-        IEmbedBuilderService eb)
+        IEmbedBuilderService eb,
+        ILocalization loc,
+        IMedusaLoaderService medusae)
     {
         _ch = ch;
         _strings = strings;
         _dpos = dpos;
         _bss = bss;
         _eb = eb;
+        _loc = loc;
+        _medusae = medusae;
     }
 
     public Task LateExecute(IGuild guild, IUserMessage msg)
@@ -57,13 +63,16 @@ public class HelpService : ILateExecutor, INService
     public IEmbedBuilder GetCommandHelp(CommandInfo com, IGuild guild)
     {
         var prefix = _ch.GetPrefix(guild);
-
+        
         var str = $"**`{prefix + com.Aliases.First()}`**";
         var alias = com.Aliases.Skip(1).FirstOrDefault();
         if (alias is not null)
             str += $" **/ `{prefix + alias}`**";
 
-        var em = _eb.Create().AddField(str, $"{com.RealSummary(_strings, guild?.Id, prefix)}", true);
+        var culture = _loc.GetCultureInfo(guild);
+        
+        var em = _eb.Create()
+                    .AddField(str, $"{com.RealSummary(_strings, _medusae, culture,  prefix)}", true);
 
         _dpos.TryGetOverrides(guild?.Id ?? 0, com.Name, out var overrides);
         var reqs = GetCommandRequirements(com, overrides);
@@ -72,7 +81,7 @@ public class HelpService : ILateExecutor, INService
 
         em.AddField(_strings.GetText(strs.usage),
               string.Join("\n",
-                  Array.ConvertAll(com.RealRemarksArr(_strings, guild?.Id, prefix), arg => Format.Code(arg))))
+                  Array.ConvertAll(com.RealRemarksArr(_strings,_medusae, culture, prefix), arg => Format.Code(arg))))
           .WithFooter(GetText(strs.module(com.Module.GetTopLevelModule().Name), guild))
           .WithOkColor();
 

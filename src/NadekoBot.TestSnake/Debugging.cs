@@ -14,7 +14,7 @@ public class SewuisTransient
     public SewuisTransient(SewuisSingleton sin)
     {
         _sin = sin;
-        Console.WriteLine("instantiated transient services!! Reloaded");
+        Log.Information("instantiated transient services!! Reloaded");
     }
 
     public string Tra()
@@ -45,18 +45,18 @@ public class Papa : Snek
     public override string Name
         => "papa";
 
-    [Command]
+    [cmd]
     public Task Stats(GuildContext ctx, int x)
         => ctx.Channel.SendMessageAsync($"This is my own stats {x}");
 
-    [Command]
+    [cmd]
     public async Task Singleton(GuildContext ctx, [Inject] SewuisSingleton sin)
     {
         sin.Sin();
         await ctx.Channel.SendMessageAsync("ok");
     }
     
-    [Command]
+    [cmd]
     public async Task Transient(GuildContext ctx, [Inject] SewuisTransient tra)
     {
         tra.Tra();
@@ -95,7 +95,7 @@ public class Papa : Snek
             return default;
         }
 
-        [Command]
+        [cmd]
         public async Task Stats(GuildContext ctx)
         {
             await ctx.Channel.SendMessageAsync(
@@ -118,33 +118,33 @@ public class Papa : Snek
         //     await ctx.Channel.SendMessageAsync("owo " + a + b);
         // }
 
-        [Command]
+        [cmd]
         public void Void(GuildContext ctx)
         {
             Console.WriteLine("void");
         }
         
-        [Command]
+        [cmd]
         public Task Task(GuildContext ctx)
         {
             return ctx.Channel.SendMessageAsync("Task");
         }
         
-        [Command]
+        [cmd]
         public async Task<int> Taskt(GuildContext ctx)
         {
             await ctx.Channel.SendMessageAsync("Hello taskt");
             return 1;
         }
         
-        [Command]
+        [cmd]
         public async Task Owo(GuildContext ctx)
         {
             await ctx.Channel.SendMessageAsync(
                 $"Basic owo command!! Does unloading work after a few horus? Just rebuild!!");
         }
 
-        [Command]
+        [cmd]
         public async Task par(AnyContext ctx, string a, int b, [Leftover] IGuildUser? c = null)
         {
             await ctx.Channel.SendMessageAsync($@"This command has 3 parameters, last one being optional and leftover:
@@ -153,36 +153,36 @@ int b = {b}
 IGuildUser c = {c}");
         }
 
-        [Command]
-        [Priority(1)]
+        [cmd]
+        [prio(1)]
         public ValueTask Noctx()
         {
             Console.WriteLine("No context");
             return default;
         }
 
-        [Command("al", "ali", "alia")]
+        [cmd("al", "ali", "alia")]
         public async Task Aloo(AnyContext ctx)
         {
             await ctx.Channel.SendMessageAsync($"This command should work with al, ali and alia aliases");
         }
         
-        [Command("ctx")]
-        [Priority(1)]
+        [cmd("ctx")]
+        [prio(1)]
         public async Task Ctx(GuildContext ctx)
         {
             await ctx.Channel.SendMessageAsync($"Server context {ctx.Guild.Name}! Improved!!!");
         }
 
-        [Command("ctx")]
-        [Priority(0)]
+        [cmd("ctx")]
+        [prio(0)]
         public async Task Ctx(AnyContext ctx)
         {
             await ctx.Channel.SendMessageAsync($"Any context");
         }
 
-        [Command("ctx")]
-        [Priority(1)]
+        [cmd("ctx")]
+        [prio(1)]
         public async Task Ctx(DmContext ctx)
         {
             await ctx.Channel.SendMessageAsync($"DM context");

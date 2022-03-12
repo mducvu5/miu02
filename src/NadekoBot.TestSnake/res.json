@@ -1,0 +1,6 @@
+{
+  "loc": "This is a localized medusa string coming from res.json",
+  "ok-reply": "This is an ok reply",
+  "pending-reply": "This is a pending reply",
+  "error-reply": "This is an error reply"
+}

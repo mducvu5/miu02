@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Nadeko.Snake;
-
-public sealed record SnekData(
+﻿public sealed record SnekData(
     string Name,
     SnekData? Parent,
     Snek Instance,

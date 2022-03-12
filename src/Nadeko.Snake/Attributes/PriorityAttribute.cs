@@ -4,7 +4,7 @@ namespace Nadeko.Snake;
 /// Higher value means higher priority
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public class PriorityAttribute : Attribute
+public class prioAttribute : Attribute
 {
     public int Priority { get; }
 
@@ -12,7 +12,7 @@ public class PriorityAttribute : Attribute
     /// Snek command priority
     /// </summary>
     /// <param name="priority">Priority value. The higher the value, the higher the priority</param>
-    public PriorityAttribute(int priority)
+    public prioAttribute(int priority)
     {
         Priority = priority;
     }

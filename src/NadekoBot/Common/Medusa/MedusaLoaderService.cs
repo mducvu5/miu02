@@ -1,12 +1,11 @@
 ﻿using Discord.Commands.Builders;
 using Microsoft.Extensions.DependencyInjection;
-using Nadeko.Snake;
 using NadekoBot.Common.Medusa;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using PriorityAttribute = Nadeko.Snake.PriorityAttribute;
 
 public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 {
@@ -21,6 +20,24 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
+    public string[] GetCommandUsages(string medusaName, string commandName, CultureInfo culture)
+    {
+        if (!_loaded.TryGetValue(medusaName, out var data))
+            return Array.Empty<string>();
+
+        return data.Strings.GetCommandStrings(commandName, culture).Args;
+    }
+    
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public string GetCommandDescription(string medusaName, string commandName, CultureInfo culture)
+    {
+        if (!_loaded.TryGetValue(medusaName, out var data))
+            return string.Empty;
+
+        return data.Strings.GetCommandStrings(commandName, culture).Desc;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public async Task<bool> LoadSnekAsync(string name)
     {
         if (_loaded.ContainsKey(name))
@@ -32,6 +49,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         
         if (LoadAssemblyInternal(path, out var ctx, out var snekData, out var services))
         {
+            var strings = MedusaStrings.CreateDefault($"medusae/{safeName}");
+            
             var moduleInfos = new List<ModuleInfo>();
             foreach (var point in snekData)
             {
@@ -44,7 +63,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                         await sub.Instance.InitializeAsync();
                     }
 
-                    var module = await LoadModuleInternalAsync(point, services);
+                    var module = await LoadModuleInternalAsync(name, point, strings, services);
                     moduleInfos.Add(module);
                 }
                 catch (Exception ex)
@@ -60,7 +79,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 
             _loaded[name] = new(LoadContext: ctx,
                 ModuleInfos: moduleInfos.ToImmutableArray(),
-                SnekInfos: snekData.ToImmutableArray())
+                SnekInfos: snekData.ToImmutableArray(),
+                strings)
             {
                 Services = services
             };
@@ -97,16 +117,20 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     }
     
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private async Task<ModuleInfo> LoadModuleInternalAsync(SnekData snekInfo, IServiceProvider services)
+    private async Task<ModuleInfo> LoadModuleInternalAsync(string medusaName, SnekData snekInfo, IMedusaStrings strings, IServiceProvider services)
     {
         var module = await _cmdService.CreateModuleAsync(snekInfo.Instance.Prefix,
-            CreateModuleFactory(snekInfo, services));
+            CreateModuleFactory(medusaName, snekInfo, strings, services));
         
         return module;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private Action<ModuleBuilder> CreateModuleFactory(SnekData snekInfo, IServiceProvider medusaServices)
+    private Action<ModuleBuilder> CreateModuleFactory(
+        string medusaName,
+        SnekData snekInfo,
+        IMedusaStrings strings,
+        IServiceProvider medusaServices)
         => mb =>
         {
             var m = mb.WithName(snekInfo.Name);
@@ -116,18 +140,19 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                 m.AddCommand(cmd.Aliases.First(),
                     CreateCallback(cmd.ContextType,
                         new(snekInfo),
-                        new(cmd), 
-                        new(medusaServices)),
-                    CreateCommandFactory(cmd));
+                        new(cmd),
+                        new(medusaServices),
+                        strings),
+                    CreateCommandFactory(medusaName, cmd));
             }
 
             foreach (var subInfo in snekInfo.Submodules)
-                m.AddModule(subInfo.Instance.Prefix, CreateModuleFactory(subInfo, medusaServices));
+                m.AddModule(subInfo.Instance.Prefix, CreateModuleFactory(medusaName, subInfo, strings, medusaServices));
         };
 
     private static readonly RequireContextAttribute _reqGuild = new RequireContextAttribute(ContextType.Guild);
     private static readonly RequireContextAttribute _reqDm = new RequireContextAttribute(ContextType.DM);
-    private Action<CommandBuilder> CreateCommandFactory(SnekCommandData cmd)
+    private Action<CommandBuilder> CreateCommandFactory(string medusaName, SnekCommandData cmd)
         => (cb) =>
         {
             cb.AddAliases(cmd.Aliases.Skip(1).ToArray());
@@ -141,6 +166,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
             
             // using summary to save method name
             // method name is used to retrieve desc/usages
+            cb.WithRemarks($"medusa///{medusaName}");
             cb.WithSummary(cmd.MethodInfo.Name.ToLowerInvariant());
             
             foreach (var param in cmd.Parameters)
@@ -162,7 +188,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         CommandContextType contextType,
         WeakReference<SnekData> snekDataWr,
         WeakReference<SnekCommandData> snekCommandDataWr,
-        WeakReference<IServiceProvider> medusaServicesWr)
+        WeakReference<IServiceProvider> medusaServicesWr,
+        IMedusaStrings strings)
         => async (context, parameters, svcs, _) =>
         {
             if (!snekCommandDataWr.TryGetTarget(out var cmdData)
@@ -173,7 +200,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                 return;
             }
                 
-            var paramObjs = ParamObjs(contextType, cmdData, parameters, context, svcs, medusaServices);
+            var paramObjs = ParamObjs(contextType, cmdData, parameters, context, svcs, medusaServices, strings);
 
             try
             {
@@ -209,7 +236,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         object[] parameters,
         ICommandContext context,
         IServiceProvider svcs,
-        IServiceProvider medusaServices)
+        IServiceProvider medusaServices,
+        IMedusaStrings strings)
     {
         var extraParams = contextType == CommandContextType.Unspecified ? 0 : 1;
         extraParams += cmdData.InjectedParams.Count;
@@ -219,9 +247,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         var startAt = 0;
         if (contextType != CommandContextType.Unspecified)
         {
-            paramObjs[0] = context.Guild is null
-                ? new DmContextAdapter(context)
-                : new GuildContextAdapter(context);
+            paramObjs[0] = ContextAdapterFactory.CreateNew(context, strings, svcs);
 
             startAt = 1;
         }
@@ -472,7 +498,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                                       | BindingFlags.Public)
                           .Where(static x =>
                           {
-                              if(x.GetCustomAttribute<Command>(true) is null)
+                              if(x.GetCustomAttribute<cmdAttribute>(true) is null)
                                   return false;
 
                               if (x.ReturnType.IsGenericType)
@@ -510,7 +536,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         foreach (var method in methodInfos)
         {
             var filters = method.GetCustomAttributes<FilterAttribute>().ToArray();
-            var prio = method.GetCustomAttribute<PriorityAttribute>()?.Priority ?? 0;
+            var prio = method.GetCustomAttribute<prioAttribute>()?.Priority ?? 0;
 
             var paramInfos = method.GetParameters();
             var cmdParams = new List<ParamData>();
@@ -587,7 +613,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
             }
 
 
-            var aliases = method.GetCustomAttribute<Command>()!.Aliases;
+            var aliases = method.GetCustomAttribute<cmdAttribute>()!.Aliases;
             if (aliases.Length == 0)
                 aliases = new[] { method.Name.ToLowerInvariant() };
             

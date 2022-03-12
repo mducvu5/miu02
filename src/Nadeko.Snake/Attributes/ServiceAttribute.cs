@@ -4,7 +4,7 @@
 public class ServiceAttribute : Attribute
 {
     public Lifetime Lifetime { get; }
-    public ServiceAttribute(Lifetime lifetime = Lifetime.Singleton)
+    public ServiceAttribute(Lifetime lifetime)
     {
         Lifetime = lifetime;
     }

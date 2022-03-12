@@ -3,7 +3,8 @@
 public sealed record ResolvedMedusa(
     WeakReference<MedusaAssemblyLoadContext> LoadContext,
     IImmutableList<ModuleInfo> ModuleInfos,
-    IImmutableList<SnekData> SnekInfos)
+    IImmutableList<SnekData> SnekInfos,
+    IMedusaStrings Strings)
 {
     public IServiceProvider Services { get; set; } = null!;
 }
