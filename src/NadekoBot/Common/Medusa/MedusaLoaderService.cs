@@ -1,6 +1,7 @@
 ﻿using Discord.Commands.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using NadekoBot.Common.Medusa;
+using NadekoBot.Common.TypeReaders;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -11,7 +12,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 {
     private readonly CommandService _cmdService;
     private readonly IServiceProvider _svcs;
-    private readonly Dictionary<string, ResolvedMedusa> _loaded = new();
+    private readonly ConcurrentDictionary<string, ResolvedMedusa> _loaded = new();
+    private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
 
     public MedusaLoaderService(CommandService cmdService, IServiceProvider svcs)
     {
@@ -44,66 +46,111 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
             return false;
         
         var safeName = Uri.EscapeDataString(name);
-        var path = $"medusae/{safeName}/{safeName}.dll";
         name = name.ToLowerInvariant();
-        
-        if (LoadAssemblyInternal(path, out var ctx, out var snekData, out var services))
-        {
-            var strings = MedusaStrings.CreateDefault($"medusae/{safeName}");
-            
-            var moduleInfos = new List<ModuleInfo>();
-            foreach (var point in snekData)
-            {
-                try
-                {
-                    // initialize snek and subsneks
-                    await point.Instance.InitializeAsync();
-                    foreach (var sub in point.Submodules)
-                    {
-                        await sub.Instance.InitializeAsync();
-                    }
 
-                    var module = await LoadModuleInternalAsync(name, point, strings, services);
-                    moduleInfos.Add(module);
-                }
-                catch (Exception ex)
+        await _lock.WaitAsync();
+        try
+        {
+            if (LoadAssemblyInternal(
+                    safeName,
+                    out var ctx,
+                    out var snekData,
+                    out var services,
+                    out var strings,
+                    out var typeReaders))
+            {
+                var moduleInfos = new List<ModuleInfo>();
+
+                LoadTypeReadersInternal(typeReaders);
+
+                foreach (var point in snekData)
                 {
-                    Log.Warning(ex,
-                        "Error loading snek {SnekName} from {Path}",
-                        point.Name,
-                        path);
-                    
-                    continue;
+                    try
+                    {
+                        // initialize snek and subsneks
+                        await point.Instance.InitializeAsync();
+                        foreach (var sub in point.Submodules)
+                        {
+                            await sub.Instance.InitializeAsync();
+                        }
+
+                        var module = await LoadModuleInternalAsync(name, point, strings, services);
+                        moduleInfos.Add(module);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex,
+                            "Error loading snek {SnekName}",
+                            point.Name);
+
+                        continue;
+                    }
                 }
+
+                _loaded[name] = new(LoadContext: ctx,
+                    ModuleInfos: moduleInfos.ToImmutableArray(),
+                    SnekInfos: snekData.ToImmutableArray(),
+                    strings,
+                    typeReaders)
+                {
+                    Services = services
+                };
+
+                services = null;
+                return true;
             }
 
-            _loaded[name] = new(LoadContext: ctx,
-                ModuleInfos: moduleInfos.ToImmutableArray(),
-                SnekInfos: snekData.ToImmutableArray(),
-                strings)
-            {
-                Services = services
-            };
-
-            services = null;
-            return true;
+            return false;
         }
-        
-        return false;
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private bool LoadAssemblyInternal(string path, 
+    private void LoadTypeReadersInternal(Dictionary<Type, TypeReader> typeReaders)
+    {
+        var notAddedTypeReaders = new List<Type>();
+        foreach (var (type, typeReader) in typeReaders)
+        {
+            // if type reader for this type already exists, it will not be replaced
+            if (_cmdService.TypeReaders.Contains(type))
+            {
+                notAddedTypeReaders.Add(type);
+                continue;
+            }
+
+            _cmdService.AddTypeReader(type, typeReader);
+        }
+
+        // remove the ones that were not added
+        // to prevent them from being unloaded later
+        // as they didn't come from this medusa
+        foreach (var toRemove in notAddedTypeReaders)
+        {
+            typeReaders.Remove(toRemove);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private bool LoadAssemblyInternal(
+        string safeName,
         [NotNullWhen(true)] out WeakReference<MedusaAssemblyLoadContext>? ctxWr,
         [NotNullWhen(true)] out IReadOnlyCollection<SnekData>? snekData,
-        out IServiceProvider services)
+        out IServiceProvider services,
+        out IMedusaStrings strings,
+        out Dictionary<Type, TypeReader> typeReaders)
     {
         ctxWr = null;
         snekData = null;
         
+        var path = $"medusae/{safeName}/{safeName}.dll";
+        strings = MedusaStrings.CreateDefault($"medusae/{safeName}");
         var ctx = new MedusaAssemblyLoadContext(Path.GetDirectoryName(path)!);
         var a = ctx.LoadFromAssemblyPath(Path.GetFullPath(path));
         var sis = LoadSneksFromAssembly(a, out services);
+        typeReaders = LoadTypeReadersFromAssembly(a, strings, new(services));
 
         if (sis.Count == 0)
         {
@@ -115,7 +162,38 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         
         return true;
     }
+
+    private static readonly Type _paramParserType = typeof(ParamParser<>);
     
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private Dictionary<Type, TypeReader> LoadTypeReadersFromAssembly(
+        Assembly assembly,
+        IMedusaStrings strings,
+        WeakReference<IServiceProvider> services)
+    {
+        var paramParsers = assembly.GetExportedTypes()
+                .Where(x => x.IsClass
+                            && !x.IsAbstract
+                            && x.BaseType is not null
+                            && x.BaseType.IsGenericType
+                            && x.BaseType.GetGenericTypeDefinition() == _paramParserType);
+
+        var typeReaders = new Dictionary<Type, TypeReader>();
+        foreach (var parserType in paramParsers)
+        {
+            var parserObj = ActivatorUtilities.CreateInstance(new MedusaServiceProvider(_svcs, services), parserType);
+
+            var targetType = parserType.BaseType!.GetGenericArguments()[0];
+            var typeReaderInstance = (TypeReader)Activator.CreateInstance(
+                typeof(TypeReaderParamParserAdapter<>).MakeGenericType(targetType),
+                args: new[] { parserObj, strings, services })!;
+            
+            typeReaders.Add(targetType, typeReaderInstance);
+        }
+
+        return typeReaders;
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private async Task<ModuleInfo> LoadModuleInternalAsync(string medusaName, SnekData snekInfo, IMedusaStrings strings, IServiceProvider services)
     {
@@ -284,22 +362,35 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         if (!_loaded.Remove(name, out var lsi))
             return false;
 
-        foreach (var mi in lsi.ModuleInfos)
+        await _lock.WaitAsync();
+        try
         {
-            await _cmdService.RemoveModuleAsync(mi);
+            // foreach (var tr in lsi.TypeReaders)
+            // {
+            //     _cmdService.TypeReaders
+            // }
+
+            foreach (var mi in lsi.ModuleInfos)
+            {
+                await _cmdService.RemoveModuleAsync(mi);
+            }
+
+            await DisposeSnekInstances(lsi);
+
+            var lc = lsi.LoadContext;
+
+            // removing this line will prevent assembly from being unloaded quickly
+            // as this local variable will be held for a long time potentially
+            // due to how async works
+            // await lsi.Services.DisposeAsync();
+            lsi.Services = null!;
+            lsi = null;
+            return UnloadInternal(lc);
         }
-
-        await DisposeSnekInstances(lsi);
-
-        var lc = lsi.LoadContext;
-        
-        // removing this line will prevent assembly from being unloaded quickly
-        // as this local variable will be held for a long time potentially
-        // due to how async works
-        // await lsi.Services.DisposeAsync();
-        lsi.Services = null!;
-        lsi = null;
-        return UnloadInternal(lc);
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

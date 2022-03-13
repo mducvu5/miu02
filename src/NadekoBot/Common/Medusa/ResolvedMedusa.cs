@@ -4,7 +4,8 @@ public sealed record ResolvedMedusa(
     WeakReference<MedusaAssemblyLoadContext> LoadContext,
     IImmutableList<ModuleInfo> ModuleInfos,
     IImmutableList<SnekData> SnekInfos,
-    IMedusaStrings Strings)
+    IMedusaStrings Strings,
+    Dictionary<Type, TypeReader> TypeReaders)
 {
     public IServiceProvider Services { get; set; } = null!;
 }

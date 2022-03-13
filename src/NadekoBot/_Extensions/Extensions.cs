@@ -101,7 +101,7 @@ public static class Extensions
         string prefix)
     {
         string[] args;
-        if (cmd.Remarks.StartsWith("medusa///"))
+        if (cmd.Remarks?.StartsWith("medusa///") ?? false)
         {
             // command method name is kept in Summary
             // medusa///<medusa-name-here> is kept in remarks

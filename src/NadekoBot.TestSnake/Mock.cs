@@ -55,4 +55,36 @@ public class Mock : Snek
         await ctx.ErrorAsync();
         await Task.Delay(1000);
     }
+
+    [cmd]
+    public async Task Type(GuildContext ctx, MyType type)
+    {
+        await ctx.SendConfirmAsync(type.Text);
+    }
+}
+
+public class MyType
+{
+    public string Text { get; init; } = string.Empty;
+}
+
+public sealed class MyTypeParamParser : ParamParser<MyType>
+{
+    private readonly SewuisSingleton _svc;
+
+    public MyTypeParamParser(SewuisSingleton svc)
+    {
+        _svc = svc;
+    }
+    
+    public override ValueTask<ParseResult<MyType>> TryParseAsync(AnyContext ctx, string data)
+    {
+        if (data.Contains("0"))
+            return new(ParseResult<MyType>.FromSuccess(new MyType()
+            {
+                Text = data
+            }));
+
+        return new(ParseResult<MyType>.Fail());
+    }
 }
