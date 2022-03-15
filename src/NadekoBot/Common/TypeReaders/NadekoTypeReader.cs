@@ -41,8 +41,8 @@ public sealed class TypeReaderParamParserAdapter<T> : TypeReader
         
         var result = await _parser.TryParseAsync(medusaContext, input);
         
-        if(result.Success)
-            return Discord.Commands.TypeReaderResult.FromSuccess(result.Object);
+        if(result.IsSuccess)
+            return Discord.Commands.TypeReaderResult.FromSuccess(result.Data);
         
         return Discord.Commands.TypeReaderResult.FromError(CommandError.Unsuccessful, "Invalid input");
     }

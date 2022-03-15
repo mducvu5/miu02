@@ -61,6 +61,60 @@ public abstract class Snek : IAsyncDisposable
     /// <returns></returns>
     public virtual ValueTask DisposeAsync()
         => default;
+
+    /// <summary>
+    /// This method is called right after the message was received by the bot.
+    /// You can use this method to make the bot ignore certain messages based on a condition.
+    /// Or you can run custom logic without intention of blocking the further processing of the message 
+    /// </summary>
+    /// <param name="guild">Guild in which the message was sent</param>
+    /// <param name="msg">Message received by the bot</param>
+    /// <returns>Whether the message should be ignored and not processed further</returns>
+    public virtual ValueTask<bool> ExecEarlyAsync(IGuild? guild, IUserMessage msg)
+        => default;
+
+    /// <summary>
+    /// Override this method to modify input before the bot searches for any commands matching the input
+    /// Executed after <see cref="ExecEarlyAsync"/>
+    /// This is useful if you want to reinterpret the message under some conditions 
+    /// </summary>
+    /// <param name="guild">Guild in which the message was sent</param>
+    /// <param name="channel">Channel in which the message was sent</param>
+    /// <param name="user">User who sent the message</param>
+    /// <param name="input">Content of the message</param>
+    /// <returns>New, potentially modified content</returns>
+    public virtual ValueTask<string> ExecInputTransformAsync(
+        IGuild? guild,
+        IMessageChannel channel,
+        IUser user,
+        string input
+    )
+        => default;
+    
+    /// <summary>
+    /// This method is called after the command was found but not executed,
+    /// and can be used to prevent the command's execution.
+    /// The command information doesn't have to be from this snek as this method
+    /// will be called when *any* command from any module or snek was found.
+    /// You can choose to prevent the execution of the command by returning "true" value.
+    /// </summary>
+    /// <param name="context">Command context</param>
+    /// <param name="moduleName">Name of the snek or module from which the command originates</param>
+    /// <param name="commandName">Name of the command which is about to be executed</param>
+    /// <returns>Whether the execution should be blocked</returns>
+    public virtual ValueTask<bool> ExecLateAsync(
+        AnyContext context,
+        string moduleName,
+        string commandName
+    )
+        => default;
+
+    /// <summary>
+    /// This method is called after the command was succesfully executed
+    /// </summary>
+    /// <returns>A <see cref="ValueTask"/> representing completion</returns>
+    public virtual ValueTask ExecPostCommandAsync()
+        => default;
 }
 
 public readonly struct ExecResponse

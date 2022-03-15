@@ -8,17 +8,87 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+public sealed class BehaviorAdapter : ICustomBehavior
+{
+    private readonly Snek s;
+
+    // unused
+    public int Priority { get; }
+
+    public BehaviorAdapter(Snek s)
+    {
+        this.s = s;
+    }
+
+    public Task<bool> TryBlockLate(ICommandContext context, string moduleName, CommandInfo command)
+        => s.ExecLateAsync();
+
+    public Task<bool> RunBehavior(IGuild guild, IUserMessage msg)
+        => s.ExecEarlyAsync(guild, msg).AsTask();
+
+    public Task<string> TransformInput(
+        IGuild guild,
+        IMessageChannel channel,
+        IUser user,
+        string input)
+        => s.ExecInputTransformAsync(guild, channel, user, input).AsTask();
+
+    public Task LateExecute(IGuild guild, IUserMessage msg)
+        => s.ExecPostCommandAsync()
+}
+
+// ReSharper disable RedundantAssignment
 public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 {
     private readonly CommandService _cmdService;
     private readonly IServiceProvider _svcs;
+    private readonly IBehaviourExecutor _behExecutor;
+    private readonly IPubSub _pubSub;
     private readonly ConcurrentDictionary<string, ResolvedMedusa> _loaded = new();
     private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
 
-    public MedusaLoaderService(CommandService cmdService, IServiceProvider svcs)
+    private readonly TypedKey<string> _loadKey = new("medusa:load");
+    private readonly TypedKey<string> _unloadKey = new("medusa:unload");
+
+    public MedusaLoaderService(CommandService cmdService,
+        IServiceProvider svcs,
+        IBehaviourExecutor behExecutor,
+        IPubSub pubSub)
     {
         _cmdService = cmdService;
         _svcs = svcs;
+        _behExecutor = behExecutor;
+        _pubSub = pubSub;
+        
+        // has to be done this way to support this feature on sharded bots
+        _pubSub.Sub(_loadKey, async name => await InternalLoadSnekAsync(name));
+        _pubSub.Sub(_unloadKey, async name => await InternalUnloadSnekAsync(name));
+    }
+
+    public async Task<bool> LoadSnekAsync(string moduleName)
+    {
+        // try loading on this shard first to see if it works
+        if (await InternalLoadSnekAsync(moduleName))
+        {
+            // if it does publish it so that other shards can load the medusa too
+            // this method will be ran twice on this shard but it doesn't matter as 
+            // the second attempt will be ignored
+            await _pubSub.Pub(_loadKey, moduleName);
+            return true;
+        }
+
+        return false;
+    }
+    
+    public async Task<bool> UnloadSnekAsync(string moduleName)
+    {
+        if (await InternalUnloadSnekAsync(moduleName))
+        {
+            await _pubSub.Pub(_loadKey, moduleName);
+            return true;
+        }
+
+        return false;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -38,9 +108,9 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 
         return data.Strings.GetCommandStrings(commandName, culture).Desc;
     }
-
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public async Task<bool> LoadSnekAsync(string name)
+    private async ValueTask<bool> InternalLoadSnekAsync(string name)
     {
         if (_loaded.ContainsKey(name))
             return false;
@@ -51,8 +121,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         await _lock.WaitAsync();
         try
         {
-            if (LoadAssemblyInternal(
-                    safeName,
+            if (LoadAssemblyInternal(safeName,
                     out var ctx,
                     out var snekData,
                     out var services,
@@ -82,8 +151,6 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                         Log.Warning(ex,
                             "Error loading snek {SnekName}",
                             point.Name);
-
-                        continue;
                     }
                 }
 
@@ -302,6 +369,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
             {
                 paramObjs = null;
                 cmdData = null;
+                
                 snekData = null;
                 medusaServices = null;
             }
@@ -356,7 +424,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public async Task<bool> UnloadSnekAsync(string name)
+    private async Task<bool> InternalUnloadSnekAsync(string name)
     {
         name = name.ToLowerInvariant();
         if (!_loaded.Remove(name, out var lsi))
@@ -566,7 +634,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         var filters = type.GetCustomAttributes<FilterAttribute>(true)
                           .ToArray();
         
-        var instance = (Snek)ActivatorUtilities.CreateInstance(new MedusaServiceProvider(_svcs, new(medusaServices)), type)!;
+        var instance = (Snek)ActivatorUtilities.CreateInstance(new MedusaServiceProvider(_svcs, new(medusaServices)), type);
         
         var module = new SnekData(instance.Name,
             parentData,

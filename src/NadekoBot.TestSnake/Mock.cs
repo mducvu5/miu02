@@ -68,6 +68,11 @@ public class MyType
     public string Text { get; init; } = string.Empty;
 }
 
+public struct MyValue
+{
+    public string Text { get; set; }
+}
+
 public sealed class MyTypeParamParser : ParamParser<MyType>
 {
     private readonly SewuisSingleton _svc;
@@ -80,7 +85,7 @@ public sealed class MyTypeParamParser : ParamParser<MyType>
     public override ValueTask<ParseResult<MyType>> TryParseAsync(AnyContext ctx, string data)
     {
         if (data.Contains("0"))
-            return new(ParseResult<MyType>.FromSuccess(new MyType()
+            return new(ParseResult<MyType>.Success(new()
             {
                 Text = data
             }));

@@ -2,20 +2,21 @@ namespace Nadeko.Snake;
 
 public readonly struct ParseResult<T>
 {
-    public bool Success { get; private init; }
-    public T? Object { get; private init;  }
+    public bool IsSuccess { get; private init; }
+    public T? Data { get; private init;  }
 
+    // add reason in the future?
     public static ParseResult<T> Fail()
         => new ParseResult<T>
         {
-            Success = false,
-            Object = default,
+            IsSuccess = false,
+            Data = default,
         };
 
-    public static ParseResult<T> FromSuccess(T obj)
+    public static ParseResult<T> Success(T obj)
         => new ParseResult<T>
         {
-            Success = true,
-            Object = obj,
+            IsSuccess = true,
+            Data = obj,
         };
 }
