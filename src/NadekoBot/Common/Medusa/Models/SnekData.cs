@@ -1,4 +1,6 @@
-﻿public sealed record SnekData(
+﻿namespace Nadeko.Medusa;
+
+public sealed record SnekData(
     string Name,
     SnekData? Parent,
     Snek Instance,

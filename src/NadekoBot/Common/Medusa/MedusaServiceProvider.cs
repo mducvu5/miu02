@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace NadekoBot.Common.Medusa;
+namespace Nadeko.Medusa;
 
 public class MedusaServiceProvider : IServiceProvider
 {

@@ -1,5 +1,6 @@
 #nullable disable
 using Amazon.S3;
+using Nadeko.Medusa;
 using NadekoBot.Modules.Help.Common;
 using NadekoBot.Modules.Help.Services;
 using NadekoBot.Modules.Permissions.Services;

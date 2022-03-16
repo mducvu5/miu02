@@ -1,4 +1,6 @@
-﻿public sealed record ParamData(
+﻿namespace Nadeko.Medusa;
+
+public sealed record ParamData(
     Type Type,
     string Name,
     bool IsOptional,

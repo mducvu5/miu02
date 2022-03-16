@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using System.Runtime.Loader;
 
+namespace Nadeko.Medusa;
+
 public sealed class MedusaAssemblyLoadContext : AssemblyLoadContext
 {
     private readonly AssemblyDependencyResolver _depResolver;

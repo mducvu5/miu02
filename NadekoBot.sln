@@ -29,7 +29,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NadekoBot.VotesApi", "src\N
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "uwu", "src\NadekoBot.TestSnake\uwu.csproj", "{8A7C5D89-B793-4863-8F28-895F8BC8A1C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nadeko.Snake", "src\Nadeko.Snake\Nadeko.Snake.csproj", "{E685977E-31A4-46F4-A5D7-4E3E39E82E43}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nadeko.Medusa", "src\Nadeko.Medusa\Nadeko.Medusa.csproj", "{E685977E-31A4-46F4-A5D7-4E3E39E82E43}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

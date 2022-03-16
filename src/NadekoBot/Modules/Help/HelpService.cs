@@ -1,11 +1,12 @@
 #nullable disable
 using CommandLine;
+using Nadeko.Medusa;
 using NadekoBot.Common.ModuleBehaviors;
 using NadekoBot.Modules.Administration.Services;
 
 namespace NadekoBot.Modules.Help.Services;
 
-public class HelpService : ILateExecutor, INService
+public class HelpService : IExecNoCommand, INService
 {
     private readonly CommandHandler _ch;
     private readonly IBotStrings _strings;
@@ -33,7 +34,7 @@ public class HelpService : ILateExecutor, INService
         _medusae = medusae;
     }
 
-    public Task LateExecute(IGuild guild, IUserMessage msg)
+    public Task ExecOnNoCommandAsync(IGuild guild, IUserMessage msg)
     {
         var settings = _bss.Data;
         if (guild is null)

@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
 using Serilog;
 using YamlDotNet.Serialization;
 
@@ -19,7 +18,7 @@ public class StringsLoader
     public StringsLoader(string basePath)
     {
         _localizableResponsesPath = Path.Join(basePath, "strings/res");
-        _shortcutResponsesFile = Path.Join(basePath, "res.json");
+        _shortcutResponsesFile = Path.Join(basePath, "res.yml");
         
         _localizableCommandsPath = Path.Join(basePath, "strings/cmds");
         _shortcutCommandsFile = Path.Join(basePath, "cmds.yml");
@@ -113,7 +112,7 @@ public class StringsLoader
     {
         try
         {
-            strings = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(file));
+            strings = _deserializer.Deserialize<Dictionary<string, string>?>(File.ReadAllText(file));
             if (strings is null)
             {
                 localeName = null;

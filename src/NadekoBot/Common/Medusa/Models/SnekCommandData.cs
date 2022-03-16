@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
 
+namespace Nadeko.Medusa;
+
 public sealed class SnekCommandData
 {
     public SnekCommandData(

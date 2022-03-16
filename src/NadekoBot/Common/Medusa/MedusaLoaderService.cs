@@ -1,90 +1,85 @@
 ﻿using Discord.Commands.Builders;
 using Microsoft.Extensions.DependencyInjection;
-using NadekoBot.Common.Medusa;
-using NadekoBot.Common.TypeReaders;
+using NadekoBot.Common.ModuleBehaviors;
+using System.Collections;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-public sealed class BehaviorAdapter : ICustomBehavior
-{
-    private readonly Snek s;
-
-    // unused
-    public int Priority { get; }
-
-    public BehaviorAdapter(Snek s)
-    {
-        this.s = s;
-    }
-
-    public Task<bool> TryBlockLate(ICommandContext context, string moduleName, CommandInfo command)
-        => s.ExecLateAsync();
-
-    public Task<bool> RunBehavior(IGuild guild, IUserMessage msg)
-        => s.ExecEarlyAsync(guild, msg).AsTask();
-
-    public Task<string> TransformInput(
-        IGuild guild,
-        IMessageChannel channel,
-        IUser user,
-        string input)
-        => s.ExecInputTransformAsync(guild, channel, user, input).AsTask();
-
-    public Task LateExecute(IGuild guild, IUserMessage msg)
-        => s.ExecPostCommandAsync()
-}
+namespace Nadeko.Medusa;
 
 // ReSharper disable RedundantAssignment
-public sealed class MedusaLoaderService : IMedusaLoaderService, INService
+public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, INService
 {
     private readonly CommandService _cmdService;
-    private readonly IServiceProvider _svcs;
-    private readonly IBehaviourExecutor _behExecutor;
+    private readonly IServiceProvider _botServices;
+    private readonly IBehaviorHandler _behHandler;
     private readonly IPubSub _pubSub;
-    private readonly ConcurrentDictionary<string, ResolvedMedusa> _loaded = new();
+    private readonly IMedusaConfigService _medusaConfig;
+    
+    private readonly ConcurrentDictionary<string, ResolvedMedusa> _resolved = new();
     private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
 
     private readonly TypedKey<string> _loadKey = new("medusa:load");
     private readonly TypedKey<string> _unloadKey = new("medusa:unload");
+    
+    private readonly TypedKey<bool> _stringsReload = new("medusa:reload_strings");
 
     public MedusaLoaderService(CommandService cmdService,
-        IServiceProvider svcs,
-        IBehaviourExecutor behExecutor,
-        IPubSub pubSub)
+        IServiceProvider botServices,
+        IBehaviorHandler behHandler,
+        IPubSub pubSub,
+        IMedusaConfigService medusaConfig)
     {
         _cmdService = cmdService;
-        _svcs = svcs;
-        _behExecutor = behExecutor;
+        _botServices = botServices;
+        _behHandler = behHandler;
         _pubSub = pubSub;
+        _medusaConfig = medusaConfig;
         
         // has to be done this way to support this feature on sharded bots
         _pubSub.Sub(_loadKey, async name => await InternalLoadSnekAsync(name));
         _pubSub.Sub(_unloadKey, async name => await InternalUnloadSnekAsync(name));
+
+        _pubSub.Sub(_stringsReload, async _ => await ReloadStringsInternal());
     }
 
-    public async Task<bool> LoadSnekAsync(string moduleName)
+    public async Task OnReadyAsync()
+    {
+        foreach (var name in _medusaConfig.GetLoadedMedusae())
+        {
+            var result = await InternalLoadSnekAsync(name);
+            if(!result)
+                Log.Warning("Unable to load '{MedusaName}' medusa", name);
+            else 
+                Log.Warning("Loaded medusa '{MedusaName}'", name);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public async Task<bool> LoadSnekAsync(string medusaName)
     {
         // try loading on this shard first to see if it works
-        if (await InternalLoadSnekAsync(moduleName))
+        if (await InternalLoadSnekAsync(medusaName))
         {
             // if it does publish it so that other shards can load the medusa too
             // this method will be ran twice on this shard but it doesn't matter as 
             // the second attempt will be ignored
-            await _pubSub.Pub(_loadKey, moduleName);
+            await _pubSub.Pub(_loadKey, medusaName);
             return true;
         }
 
         return false;
     }
     
-    public async Task<bool> UnloadSnekAsync(string moduleName)
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public async Task<bool> UnloadSnekAsync(string medusaName)
     {
-        if (await InternalUnloadSnekAsync(moduleName))
+        if (await InternalUnloadSnekAsync(medusaName))
         {
-            await _pubSub.Pub(_loadKey, moduleName);
+            await _pubSub.Pub(_unloadKey, medusaName);
             return true;
         }
 
@@ -94,16 +89,41 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     [MethodImpl(MethodImplOptions.NoInlining)]
     public string[] GetCommandUsages(string medusaName, string commandName, CultureInfo culture)
     {
-        if (!_loaded.TryGetValue(medusaName, out var data))
+        if (!_resolved.TryGetValue(medusaName, out var data))
             return Array.Empty<string>();
 
         return data.Strings.GetCommandStrings(commandName, culture).Args;
     }
+
+    public Task ReloadStrings()
+        => _pubSub.Pub(_stringsReload, true);
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ReloadStringsSync()
+    {
+        foreach (var resolved in _resolved.Values)
+        {
+            resolved.Strings.Reload();
+        }
+    }
     
+    private async Task ReloadStringsInternal()
+    {
+        await _lock.WaitAsync();
+        try
+        {
+            ReloadStringsSync();
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public string GetCommandDescription(string medusaName, string commandName, CultureInfo culture)
     {
-        if (!_loaded.TryGetValue(medusaName, out var data))
+        if (!_resolved.TryGetValue(medusaName, out var data))
             return string.Empty;
 
         return data.Strings.GetCommandStrings(commandName, culture).Desc;
@@ -112,7 +132,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     [MethodImpl(MethodImplOptions.NoInlining)]
     private async ValueTask<bool> InternalLoadSnekAsync(string name)
     {
-        if (_loaded.ContainsKey(name))
+        if (_resolved.ContainsKey(name))
             return false;
         
         var safeName = Uri.EscapeDataString(name);
@@ -130,7 +150,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
             {
                 var moduleInfos = new List<ModuleInfo>();
 
-                LoadTypeReadersInternal(typeReaders);
+                // todo uncomment
+                // LoadTypeReadersInternal(typeReaders);
 
                 foreach (var point in snekData)
                 {
@@ -154,16 +175,22 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                     }
                 }
 
-                _loaded[name] = new(LoadContext: ctx,
+                var execs = GetExecsInternal(snekData, strings, services);
+                await _behHandler.AddRangeAsync(execs);
+
+                _resolved[name] = new(LoadContext: ctx,
                     ModuleInfos: moduleInfos.ToImmutableArray(),
                     SnekInfos: snekData.ToImmutableArray(),
                     strings,
-                    typeReaders)
+                    typeReaders,
+                    execs)
                 {
                     Services = services
                 };
 
+                
                 services = null;
+                _medusaConfig.AddLoadedMedusa(safeName);
                 return true;
             }
 
@@ -176,29 +203,47 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void LoadTypeReadersInternal(Dictionary<Type, TypeReader> typeReaders)
+    private IReadOnlyCollection<ICustomBehavior> GetExecsInternal(IReadOnlyCollection<SnekData> snekData, IMedusaStrings strings, IServiceProvider services)
     {
-        var notAddedTypeReaders = new List<Type>();
-        foreach (var (type, typeReader) in typeReaders)
+        var behs = new List<ICustomBehavior>();
+        foreach (var snek in snekData)
         {
-            // if type reader for this type already exists, it will not be replaced
-            if (_cmdService.TypeReaders.Contains(type))
+            behs.Add(new BehaviorAdapter(new(snek.Instance), strings, services));
+
+            foreach (var sub in snek.Submodules)
             {
-                notAddedTypeReaders.Add(type);
-                continue;
+                behs.Add(new BehaviorAdapter(new(sub.Instance), strings, services));
             }
-
-            _cmdService.AddTypeReader(type, typeReader);
         }
 
-        // remove the ones that were not added
-        // to prevent them from being unloaded later
-        // as they didn't come from this medusa
-        foreach (var toRemove in notAddedTypeReaders)
-        {
-            typeReaders.Remove(toRemove);
-        }
+        
+        return behs;
     }
+
+    // [MethodImpl(MethodImplOptions.NoInlining)]
+    // private void LoadTypeReadersInternal(Dictionary<Type, TypeReader> typeReaders)
+    // {
+    //     var notAddedTypeReaders = new List<Type>();
+    //     foreach (var (type, typeReader) in typeReaders)
+    //     {
+    //         // if type reader for this type already exists, it will not be replaced
+    //         if (_cmdService.TypeReaders.Contains(type))
+    //         {
+    //             notAddedTypeReaders.Add(type);
+    //             continue;
+    //         }
+    //
+    //         _cmdService.AddTypeReader(type, typeReader);
+    //     }
+    //
+    //     // remove the ones that were not added
+    //     // to prevent them from being unloaded later
+    //     // as they didn't come from this medusa
+    //     foreach (var toRemove in notAddedTypeReaders)
+    //     {
+    //         typeReaders.Remove(toRemove);
+    //     }
+    // }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private bool LoadAssemblyInternal(
@@ -217,7 +262,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         var ctx = new MedusaAssemblyLoadContext(Path.GetDirectoryName(path)!);
         var a = ctx.LoadFromAssemblyPath(Path.GetFullPath(path));
         var sis = LoadSneksFromAssembly(a, out services);
-        typeReaders = LoadTypeReadersFromAssembly(a, strings, new(services));
+        typeReaders = LoadTypeReadersFromAssembly(a, strings, services);
 
         if (sis.Count == 0)
         {
@@ -236,7 +281,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     private Dictionary<Type, TypeReader> LoadTypeReadersFromAssembly(
         Assembly assembly,
         IMedusaStrings strings,
-        WeakReference<IServiceProvider> services)
+        IServiceProvider services)
     {
         var paramParsers = assembly.GetExportedTypes()
                 .Where(x => x.IsClass
@@ -248,11 +293,11 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         var typeReaders = new Dictionary<Type, TypeReader>();
         foreach (var parserType in paramParsers)
         {
-            var parserObj = ActivatorUtilities.CreateInstance(new MedusaServiceProvider(_svcs, services), parserType);
+            var parserObj = ActivatorUtilities.CreateInstance(services, parserType);
 
             var targetType = parserType.BaseType!.GetGenericArguments()[0];
             var typeReaderInstance = (TypeReader)Activator.CreateInstance(
-                typeof(TypeReaderParamParserAdapter<>).MakeGenericType(targetType),
+                typeof(ParamParserAdapter<>).MakeGenericType(targetType),
                 args: new[] { parserObj, strings, services })!;
             
             typeReaders.Add(targetType, typeReaderInstance);
@@ -382,7 +427,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         object[] parameters,
         ICommandContext context,
         IServiceProvider svcs,
-        IServiceProvider medusaServices,
+        IServiceProvider svcProvider,
         IMedusaStrings strings)
     {
         var extraParams = contextType == CommandContextType.Unspecified ? 0 : 1;
@@ -397,11 +442,6 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 
             startAt = 1;
         }
-
-        var svcProvider = new MedusaServiceProvider(
-            svcs,
-            new(medusaServices)
-        );
 
         for (var i = 0; i < cmdData.InjectedParams.Count; i++)
         {
@@ -420,6 +460,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
 
         for (var i = 0; i < parameters.Length; i++)
             paramObjs[startAt + i] = parameters[i];
+        
         return paramObjs;
     }
 
@@ -427,7 +468,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     private async Task<bool> InternalUnloadSnekAsync(string name)
     {
         name = name.ToLowerInvariant();
-        if (!_loaded.Remove(name, out var lsi))
+        if (!_resolved.Remove(name, out var lsi))
             return false;
 
         await _lock.WaitAsync();
@@ -443,6 +484,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                 await _cmdService.RemoveModuleAsync(mi);
             }
 
+            await _behHandler.RemoveRangeAsync(lsi.Execs);
+            
             await DisposeSnekInstances(lsi);
 
             var lc = lsi.LoadContext;
@@ -453,6 +496,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
             // await lsi.Services.DisposeAsync();
             lsi.Services = null!;
             lsi = null;
+            
+            _medusaConfig.RemoveLoadedMedusa(name);
             return UnloadInternal(lc);
         }
         finally
@@ -462,9 +507,9 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private async Task DisposeSnekInstances(ResolvedMedusa medusae)
+    private async Task DisposeSnekInstances(ResolvedMedusa medusa)
     {
-        foreach (var si in medusae.SnekInfos)
+        foreach (var si in medusa.SnekInfos)
         {
             try
             {
@@ -485,29 +530,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
         // medusae = null;
     }
 
-    // [MethodImpl(MethodImplOptions.NoInlining)]
-    // private static void CleanupSnekData(SnekData si)
-    // {
-    //     si.Instance = null!;
-    //     si.Filters = null!;
-    //     foreach (var cmd in si.Commands)
-    //     {
-    //         cmd.Filters = null!;
-    //         cmd.Module = null!;
-    //         cmd.MethodInfo = null!;
-    //         foreach (var param in cmd.Parameters)
-    //         {
-    //             param.Type = null!;
-    //         }
-    //     }
-    //     
-    //     foreach(var data in si.Submodules)
-    //         CleanupSnekData(data);
-    //
-    //     si.Submodules.Clear();
-    //     si.Submodules.TrimExcess();
-    // }
-
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private bool UnloadInternal(WeakReference<MedusaAssemblyLoadContext> lsi)
     {
         UnloadContext(lsi);
@@ -548,46 +571,17 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
                        .AsSelfWithInterfaces()
                        .WithSingletonLifetime())
            .BuildServiceProvider();
-    // => new ServiceCollection()
-    // {
-        // var builder = new ContainerBuilder();
-        // builder
-        //     .RegisterAssemblyTypes(a)
-        //     .PublicOnly()
-        //     .Where(x => x.GetCustomAttribute<ServiceAttribute>()?.Lifetime == Lifetime.Singleton)
-        //     .AsSelf()
-        //     .AsImplementedInterfaces()
-        //     .SingleInstance();
-        //
-        //
-        // builder
-        //     .RegisterAssemblyTypes(a)
-        //     .PublicOnly()
-        //     .Where(x => x.GetCustomAttribute<ServiceAttribute>()?.Lifetime == Lifetime.Transient)
-        //     .AsSelf()
-        //     .AsImplementedInterfaces()
-        //     .InstancePerDependency();
-
-        // builder
-        //     .RegisterAssemblyTypes(a)
-        //     .PublicOnly()
-        //     .Where(x => x.GetCustomAttribute<ServiceAttribute>()?.Lifetime == Lifetime.Singleton)
-        //     .AsSelf()
-        //     .AsImplementedInterfaces()
-        //     .SingleInstance();
-
-    //     return builder.Build();
-    // }
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public IReadOnlyCollection<SnekData> LoadSneksFromAssembly(Assembly a, out IServiceProvider services)
     {
-        services = LoadMedusaServicesInternal(a);
+        var medusaServices = LoadMedusaServicesInternal(a);
+        services = new MedusaServiceProvider(_botServices, new(medusaServices));
         
         // find all types in teh assembly
         var types = a.GetExportedTypes();
-        // module is always a public non abstract class
+        // snek is always a public non abstract class
         var classes = types.Where(static x => x.IsClass
                                               && (x.IsNestedPublic || x.IsPublic)
                                               && !x.IsAbstract
@@ -629,12 +623,12 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, INService
     }
     
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private SnekData GetModuleData(Type type, IServiceProvider medusaServices, SnekData? parentData = null)
+    private SnekData GetModuleData(Type type, IServiceProvider services, SnekData? parentData = null)
     {
         var filters = type.GetCustomAttributes<FilterAttribute>(true)
                           .ToArray();
         
-        var instance = (Snek)ActivatorUtilities.CreateInstance(new MedusaServiceProvider(_svcs, new(medusaServices)), type);
+        var instance = (Snek)ActivatorUtilities.CreateInstance(services, type);
         
         var module = new SnekData(instance.Name,
             parentData,
