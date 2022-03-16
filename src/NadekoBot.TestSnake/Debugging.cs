@@ -30,7 +30,7 @@ public class SewuisSingleton
 {
     public SewuisSingleton()
     {
-        Console.WriteLine("instantiated singleton service");
+        Console.WriteLine("instantiated singleton servic e");
     }
 
     public string Sin()
@@ -102,27 +102,11 @@ public class Papa : Snek
                 $"I'm using IStatsService!, Here's the current uptime: {_stats.GetUptimeString()}");
         }
 
-        // [Command]
-        // public async Task Services(
-        //     GuildContext ctx,
-        //     [Inject] SewuisSingleton ss,
-        //     [Inject] SewuisTransient st,
-        //     int a,
-        //     int b
-        // )
-        // {
-        //     ss.Sin();
-        //     Console.WriteLine("---");
-        //     st.Tra();
-        //     
-        //     await ctx.Channel.SendMessageAsync("owo " + a + b);
-        // }
-
         [cmd]
         public void Void(GuildContext ctx)
         {
             Console.WriteLine("void");
-        }
+        } 
         
         [cmd]
         public Task Task(GuildContext ctx)
@@ -140,8 +124,7 @@ public class Papa : Snek
         [cmd]
         public async Task Owo(GuildContext ctx)
         {
-            await ctx.Channel.SendMessageAsync(
-                $"Basic owo command!! Does unloading work after a few horus? Just rebuild!!");
+            await ctx.Channel.SendMessageAsync("Is this updated?????");
         }
 
         [cmd]

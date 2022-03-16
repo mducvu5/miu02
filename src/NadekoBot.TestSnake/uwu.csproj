@@ -8,7 +8,7 @@
         <EnableDynamicLoading>true</EnableDynamicLoading>
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\Nadeko.Snake\Nadeko.Snake.csproj">
+      <ProjectReference Include="..\Nadeko.Medusa\Nadeko.Medusa.csproj">
           <Private>false</Private>
           <ExcludeAssets>runtime</ExcludeAssets>
       </ProjectReference>
@@ -19,11 +19,17 @@
       </ProjectReference>
     </ItemGroup>
     <ItemGroup>
-      <None Update="res.json">
+        <None Update="res.yml">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+        </None>
+        <None Update="cmds.yml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
         <None Update="strings/**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="cmds.yml">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 </Project>

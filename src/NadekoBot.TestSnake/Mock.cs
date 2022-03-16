@@ -1,4 +1,5 @@
-﻿using Nadeko.Snake;
+﻿using Discord;
+using Nadeko.Snake;
 
 namespace NadekoBot.TestSnake;
 
@@ -35,11 +36,11 @@ public class Mock : Snek
         // await Task.Delay(1500);
         
         // localized replies, context-based
-        await ctx.ReplyConfirmLocalizedAsync("ok-reply");
+        await ctx.ReplyConfirmLocalizedAsync("ok_reply"); 
         await Task.Delay(1500);
-        await ctx.ReplyErrorLocalizedAsync("error-reply");
+        await ctx.ReplyErrorLocalizedAsync("error_reply");
         await Task.Delay(1500);
-        await ctx.ReplyPendingLocalizedAsync("pending-reply");
+        await ctx.ReplyPendingLocalizedAsync("pending_reply");
         await Task.Delay(1500);
     }
 
@@ -56,10 +57,45 @@ public class Mock : Snek
         await Task.Delay(1000);
     }
 
-    [cmd]
-    public async Task Type(GuildContext ctx, MyType type)
+    // [cmd]
+    // public async Task Type(GuildContext ctx, MyType type)
+    // {
+    //     await ctx.SendConfirmAsync(type.Text);
+    // }
+
+    public override ValueTask<bool> ExecOnMessageAsync(IGuild? guild, IUserMessage msg)
     {
-        await ctx.SendConfirmAsync(type.Text);
+        return new(false);
+    }
+
+    public override ValueTask<string?> ExecInputTransformAsync(IGuild? guild, IMessageChannel channel, IUser user, string input)
+    {
+        return new(default(string));
+    }
+
+    public override ValueTask<bool> ExecPreCommandAsync(AnyContext context, string moduleName, string commandName)
+    {
+        return new(false);
+    }
+
+    public override ValueTask ExecPostCommandAsync(AnyContext ctx, string moduleName, string commandName)
+    {
+        return default;
+    }
+
+    public override ValueTask ExecOnNoCommandAsync(IGuild? guild, IUserMessage msg)
+    {
+        return default;
+    }
+
+    public override ValueTask InitializeAsync()
+    {
+        return default;
+    }
+
+    public override ValueTask DisposeAsync()
+    {
+        return default;
     }
 }
 

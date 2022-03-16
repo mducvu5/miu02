@@ -1,1 +1,3 @@
-ok_reply: hello
+loc:
+  desc: "Desc from the shortcut path"
+  args:
