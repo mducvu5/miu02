@@ -44,69 +44,16 @@ public class Mock : Snek
         await Task.Delay(1500);
     }
 
-    [cmd]
-    public async Task Emoji(GuildContext ctx)
-    {
-        await ctx.ConfirmAsync();
-        await Task.Delay(1000);
-        await ctx.WaitAsync();
-        await Task.Delay(1000);
-        await ctx.WarningAsync();
-        await Task.Delay(1000);
-        await ctx.ErrorAsync();
-        await Task.Delay(1000);
-    }
-
     // [cmd]
     // public async Task Type(GuildContext ctx, MyType type)
     // {
     //     await ctx.SendConfirmAsync(type.Text);
     // }
-
-    public override ValueTask<bool> ExecOnMessageAsync(IGuild? guild, IUserMessage msg)
-    {
-        return new(false);
-    }
-
-    public override ValueTask<string?> ExecInputTransformAsync(IGuild? guild, IMessageChannel channel, IUser user, string input)
-    {
-        return new(default(string));
-    }
-
-    public override ValueTask<bool> ExecPreCommandAsync(AnyContext context, string moduleName, string commandName)
-    {
-        return new(false);
-    }
-
-    public override ValueTask ExecPostCommandAsync(AnyContext ctx, string moduleName, string commandName)
-    {
-        return default;
-    }
-
-    public override ValueTask ExecOnNoCommandAsync(IGuild? guild, IUserMessage msg)
-    {
-        return default;
-    }
-
-    public override ValueTask InitializeAsync()
-    {
-        return default;
-    }
-
-    public override ValueTask DisposeAsync()
-    {
-        return default;
-    }
 }
 
 public class MyType
 {
     public string Text { get; init; } = string.Empty;
-}
-
-public struct MyValue
-{
-    public string Text { get; set; }
 }
 
 public sealed class MyTypeParamParser : ParamParser<MyType>

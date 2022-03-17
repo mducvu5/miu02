@@ -6,6 +6,7 @@ public sealed class BehaviorAdapter : ICustomBehavior
     private readonly WeakReference<Snek> _snekWr;
     private readonly IMedusaStrings _strings;
     private readonly IServiceProvider _services;
+    private readonly string _name;
 
     // unused
     public int Priority
@@ -16,6 +17,10 @@ public sealed class BehaviorAdapter : ICustomBehavior
         _snekWr = snekWr;
         _strings = strings;
         _services = services;
+
+        _name = snekWr.TryGetTarget(out var snek)
+            ? $"snek/{snek.GetType().Name}"
+            : "unknown";
     }
 
     public async Task<bool> ExecPreCommandAsync(ICommandContext context, string moduleName, CommandInfo command)
@@ -65,4 +70,7 @@ public sealed class BehaviorAdapter : ICustomBehavior
             moduleName,
             commandName);
     }
+
+    public override string ToString()
+        => _name;
 }

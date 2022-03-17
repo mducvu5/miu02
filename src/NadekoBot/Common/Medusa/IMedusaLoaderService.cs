@@ -9,4 +9,6 @@ public interface IMedusaLoaderService
     string GetCommandDescription(string medusaName, string commandName, CultureInfo culture);
     string[] GetCommandUsages(string medusaName, string commandName, CultureInfo culture);
     Task ReloadStrings();
+    IReadOnlyCollection<string> GetAvailableMedusae();
+    IReadOnlyCollection<string> GetLoadedMedusae();
 }

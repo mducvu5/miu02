@@ -975,5 +975,6 @@
   "deleted_x_servers": "Deleted {0} servers.",
   "curtr_gift": "Gift from {0} [{1}]",
   "curtr_award": "Awarded by bot owner {0} [{1}]",  
-  "curtr_take": "Taken by bot owner {0} [{1}]"  
+  "curtr_take": "Taken by bot owner {0} [{1}]",
+  "list_of_medusae": "List of Medusae"
 }

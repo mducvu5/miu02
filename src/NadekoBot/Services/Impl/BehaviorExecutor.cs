@@ -109,13 +109,20 @@ public sealed class BehaviorHandler : IBehaviorHandler, INService
                 try
                 {
                     if (await exec.ExecOnMessageAsync(guild, usrMsg))
-                        return true;
+                    {
+                        Log.Information("{TypeName} blocked message g:{GuildId} u:{UserId} c:{ChannelId} msg:{Message}",
+                            GetExecName(exec),
+                            guild?.Id,
+                            usrMsg.Author.Id,
+                            usrMsg.Channel.Id,
+                            usrMsg.Content?.TrimTo(10));
+                    }
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex,
                         "An error occurred in {TypeName} late blocker: {ErrorMessage}",
-                        exec.GetType().Name,
+                        GetExecName(exec),
                         ex.Message);
                 }
             }
@@ -142,6 +149,11 @@ public sealed class BehaviorHandler : IBehaviorHandler, INService
         return false;
     }
 
+    private string GetExecName(object exec)
+        => exec is BehaviorAdapter ba
+            ? ba.ToString()
+            : exec.GetType().Name;
+
     public async Task<bool> RunPreCommandAsync(ICommandContext ctx, CommandInfo cmd)
     {
         async Task<bool> Exec<T>(IReadOnlyCollection<T> execs) where T: IExecPreCommand
@@ -152,16 +164,19 @@ public sealed class BehaviorHandler : IBehaviorHandler, INService
                 {
                     if (await exec.ExecPreCommandAsync(ctx, cmd.Module.GetTopLevelModule().Name, cmd))
                     {
-                        Log.Information("Late blocking User [{User}] Command: [{Command}] in [{Module}]",
+                        Log.Information("{TypeName} Pre-Command blocked [{User}] Command: [{Command}]",
+                            GetExecName(exec),
                             ctx.User,
-                            cmd.Aliases[0],
-                            exec.GetType().Name);
+                            cmd.Aliases[0]);
                         return true;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "An error occurred in {TypeName} late blocker: {ErrorMessage}", exec.GetType().Name, ex.Message);
+                    Log.Error(ex,
+                        "An error occurred in {TypeName} PreCommand: {ErrorMessage}",
+                        GetExecName(exec),
+                        ex.Message);
                 }
             }
 
@@ -197,7 +212,10 @@ public sealed class BehaviorHandler : IBehaviorHandler, INService
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "An error occurred in {TypeName} late executor: {ErrorMessage}", exec.GetType().Name, ex.Message);
+                    Log.Error(ex,
+                        "An error occurred in {TypeName} OnNoCommand: {ErrorMessage}",
+                        GetExecName(exec),
+                        ex.Message);
                 }
             }
         }
@@ -217,17 +235,20 @@ public sealed class BehaviorHandler : IBehaviorHandler, INService
 
     public async Task<string> RunInputTransformersAsync(SocketGuild guild, IUserMessage usrMsg)
     {
-        async Task<string> Exec<T>(IReadOnlyCollection<T> execs, string s)
+        async Task<string> Exec<T>(IReadOnlyCollection<T> execs, string content)
             where T : IInputTransformer
         {
             foreach (var exec in execs)
             {
                 try
                 {
-                    string newContent;
-                    if ((newContent = await exec.TransformInput(guild, usrMsg.Channel, usrMsg.Author, s))
-                        != s)
+                    var newContent = await exec.TransformInput(guild, usrMsg.Channel, usrMsg.Author, content);
+                    if (newContent is not null)
                     {
+                        Log.Information("{ExecName} transformed content {OldContent} -> {NewContent}",
+                            GetExecName(exec),
+                            content,
+                            newContent);
                         return newContent;
                     }
                 }
@@ -269,7 +290,10 @@ public sealed class BehaviorHandler : IBehaviorHandler, INService
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "An error occured during PostCommand handling: {ErrorMessage}", ex.Message);
+                Log.Warning(ex,
+                    "An error occured during PostCommand handling in {ExecName}: {ErrorMessage}",
+                    GetExecName(exec),
+                    ex.Message);
             }
         }
     }

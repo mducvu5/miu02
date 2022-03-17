@@ -1,7 +1,6 @@
 ﻿using Discord.Commands.Builders;
 using Microsoft.Extensions.DependencyInjection;
 using NadekoBot.Common.ModuleBehaviors;
-using System.Collections;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -27,6 +26,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
     
     private readonly TypedKey<bool> _stringsReload = new("medusa:reload_strings");
 
+    private const string BASE_DIR = "medusae";
+
     public MedusaLoaderService(CommandService cmdService,
         IServiceProvider botServices,
         IBehaviorHandler behHandler,
@@ -45,6 +46,19 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
 
         _pubSub.Sub(_stringsReload, async _ => await ReloadStringsInternal());
     }
+
+    public IReadOnlyCollection<string> GetAvailableMedusae()
+    {
+        if (!Directory.Exists(BASE_DIR))
+            return Array.Empty<string>();
+
+        return Directory.GetDirectories(BASE_DIR)
+                        .Select(x => Path.GetRelativePath(BASE_DIR, x))
+                        .ToArray();
+    }
+
+    public IReadOnlyCollection<string> GetLoadedMedusae()
+        => _resolved.Keys.ToArray();
 
     public async Task OnReadyAsync()
     {
@@ -257,8 +271,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
         ctxWr = null;
         snekData = null;
         
-        var path = $"medusae/{safeName}/{safeName}.dll";
-        strings = MedusaStrings.CreateDefault($"medusae/{safeName}");
+        var path = $"{BASE_DIR}/{safeName}/{safeName}.dll";
+        strings = MedusaStrings.CreateDefault($"{BASE_DIR}/{safeName}");
         var ctx = new MedusaAssemblyLoadContext(Path.GetDirectoryName(path)!);
         var a = ctx.LoadFromAssemblyPath(Path.GetFullPath(path));
         var sis = LoadSneksFromAssembly(a, out services);
