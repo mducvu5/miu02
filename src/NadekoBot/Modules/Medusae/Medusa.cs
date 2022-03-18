@@ -32,11 +32,23 @@ public partial class Medusa : NadekoModule<IMedusaLoaderService>
                 10);
             return;
         }
-        
-        if (await _service.LoadSnekAsync(name))
-            await ctx.OkAsync();
+
+        var res = await _service.LoadMedusaAsync(name);
+        if (res == MedusaLoadResult.Success)
+            await ReplyConfirmLocalizedAsync(strs.medusa_loaded(Format.Code(name)));
         else
-            await ctx.ErrorAsync();
+        {
+            var locStr = res switch
+            {
+                MedusaLoadResult.Empty => strs.medusa_empty,
+                MedusaLoadResult.AlreadyLoaded => strs.medusa_already_loaded(Format.Code(name)),
+                MedusaLoadResult.NotFound => strs.medusa_invalid_not_found,
+                MedusaLoadResult.UnknownError => strs.error_occured,
+                _ => strs.error_occured
+            };
+
+            await ReplyErrorLocalizedAsync(locStr);
+        }
     }
     
     [Cmd]
@@ -61,11 +73,20 @@ public partial class Medusa : NadekoModule<IMedusaLoaderService>
             return;
         }
         
-        var succ = await _service.UnloadSnekAsync(name);
-        if (succ)
-            await ctx.OkAsync();
+        var res = await _service.UnloadMedusaAsync(name);
+        if (res == MedusaUnloadResult.Success)
+            await ReplyConfirmLocalizedAsync(strs.medusa_unloaded(Format.Code(name)));
         else
-            await ctx.ErrorAsync();
+        {
+            var locStr = res switch
+            {
+                MedusaUnloadResult.NotLoaded => strs.medusa_not_loaded,
+                MedusaUnloadResult.PossiblyUnable => strs.medusa_possibly_cant_unload,
+                _ => strs.error_occured
+            };
+
+            await ReplyErrorLocalizedAsync(locStr);
+        }
     }
 
     [Cmd]

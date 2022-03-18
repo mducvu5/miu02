@@ -41,8 +41,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
         _medusaConfig = medusaConfig;
         
         // has to be done this way to support this feature on sharded bots
-        _pubSub.Sub(_loadKey, async name => await InternalLoadSnekAsync(name));
-        _pubSub.Sub(_unloadKey, async name => await InternalUnloadSnekAsync(name));
+        _pubSub.Sub(_loadKey, async name => await InternalLoadAsync(name));
+        _pubSub.Sub(_unloadKey, async name => await InternalUnloadAsync(name));
 
         _pubSub.Sub(_stringsReload, async _ => await ReloadStringsInternal());
     }
@@ -86,8 +86,8 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
     {
         foreach (var name in _medusaConfig.GetLoadedMedusae())
         {
-            var result = await InternalLoadSnekAsync(name);
-            if(!result)
+            var result = await InternalLoadAsync(name);
+            if(result != MedusaLoadResult.Success)
                 Log.Warning("Unable to load '{MedusaName}' medusa", name);
             else 
                 Log.Warning("Loaded medusa '{MedusaName}'", name);
@@ -95,31 +95,31 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public async Task<bool> LoadSnekAsync(string medusaName)
+    public async Task<MedusaLoadResult> LoadMedusaAsync(string medusaName)
     {
         // try loading on this shard first to see if it works
-        if (await InternalLoadSnekAsync(medusaName))
+        var res = await InternalLoadAsync(medusaName);
+        if (res == MedusaLoadResult.Success)
         {
             // if it does publish it so that other shards can load the medusa too
             // this method will be ran twice on this shard but it doesn't matter as 
             // the second attempt will be ignored
             await _pubSub.Pub(_loadKey, medusaName);
-            return true;
         }
 
-        return false;
+        return res;
     }
     
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public async Task<bool> UnloadSnekAsync(string medusaName)
+    public async Task<MedusaUnloadResult> UnloadMedusaAsync(string medusaName)
     {
-        if (await InternalUnloadSnekAsync(medusaName))
+        var res = await InternalUnloadAsync(medusaName);
+        if (res == MedusaUnloadResult.Success)
         {
             await _pubSub.Pub(_unloadKey, medusaName);
-            return true;
         }
 
-        return false;
+        return res;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -166,10 +166,10 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
     }
     
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private async ValueTask<bool> InternalLoadSnekAsync(string name)
+    private async ValueTask<MedusaLoadResult> InternalLoadAsync(string name)
     {
         if (_resolved.ContainsKey(name))
-            return false;
+            return MedusaLoadResult.AlreadyLoaded;
         
         var safeName = Uri.EscapeDataString(name);
         name = name.ToLowerInvariant();
@@ -177,12 +177,14 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
         await _lock.WaitAsync();
         try
         {
-            if (LoadAssemblyInternal(safeName,
-                    out var ctx,
-                    out var snekData,
-                    out var services,
-                    out var strings,
-                    out var typeReaders))
+            var success = LoadAssemblyInternal(safeName,
+                out var ctx,
+                out var snekData,
+                out var services,
+                out var strings,
+                out var typeReaders);
+
+            if (success)
             {
                 var moduleInfos = new List<ModuleInfo>();
 
@@ -227,10 +229,19 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
                 
                 services = null;
                 _medusaConfig.AddLoadedMedusa(safeName);
-                return true;
+                return MedusaLoadResult.Success;
             }
 
-            return false;
+            return MedusaLoadResult.Empty;
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or BadImageFormatException)
+        {
+            return MedusaLoadResult.NotFound;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred loading a medusa");
+            return MedusaLoadResult.UnknownError;
         }
         finally
         {
@@ -501,11 +512,11 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private async Task<bool> InternalUnloadSnekAsync(string name)
+    private async Task<MedusaUnloadResult> InternalUnloadAsync(string name)
     {
         name = name.ToLowerInvariant();
         if (!_resolved.Remove(name, out var lsi))
-            return false;
+            return MedusaUnloadResult.NotLoaded;
 
         await _lock.WaitAsync();
         try
@@ -529,12 +540,13 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
             // removing this line will prevent assembly from being unloaded quickly
             // as this local variable will be held for a long time potentially
             // due to how async works
-            // await lsi.Services.DisposeAsync();
             lsi.Services = null!;
             lsi = null;
             
             _medusaConfig.RemoveLoadedMedusa(name);
-            return UnloadInternal(lc);
+            return UnloadInternal(lc)
+                ? MedusaUnloadResult.Success
+                : MedusaUnloadResult.PossiblyUnable;
         }
         finally
         {
@@ -827,4 +839,21 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
 Command: {m.Name}
 ParamName: {pi.Name}
 ParamType: {pi.ParameterType.Name}";
+}
+
+public enum MedusaLoadResult
+{
+    Success,
+    NotFound,
+    AlreadyLoaded,
+    Empty,
+    UnknownError,
+}
+
+public enum MedusaUnloadResult
+{
+    Success,
+    NotLoaded,
+    PossiblyUnable,
+    NotFound,
 }
