@@ -41,8 +41,26 @@ public partial class Medusa : NadekoModule<IMedusaLoaderService>
     
     [Cmd]
     [OwnerOnly]
-    public async partial Task Unload(string name)
+    public async partial Task Unload(string name = null)
     {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            var loaded = _service.GetLoadedMedusae();
+            if (loaded.Count == 0)
+            {
+                await ReplyErrorLocalizedAsync(strs.no_medusa_loaded);
+                return;
+            }
+
+            await ctx.Channel.EmbedAsync(_eb.Create(ctx)
+                                            .WithOkColor()
+                                            .WithTitle(GetText(strs.loaded_medusae))
+                                            .WithDescription(loaded.Select(x => x.Name)
+                                                                   .Join("\n")));
+            
+            return;
+        }
+        
         var succ = await _service.UnloadSnekAsync(name);
         if (succ)
             await ctx.OkAsync();

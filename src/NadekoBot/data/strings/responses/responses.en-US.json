@@ -981,5 +981,7 @@
   "medusa_name_not_found": "Medusa with that name doesn't exist or isn't loaded.",
   "medusa_info": "Medusa Information",
   "sneks_count": "Sneks ({0})",
-  "commands_count": "Commands ({0})"
+  "commands_count": "Commands ({0})",
+  "no_medusa_loaded": "There are no loaded medusae.",
+  "loaded_medusae": "Loaded Medusae"
 }
