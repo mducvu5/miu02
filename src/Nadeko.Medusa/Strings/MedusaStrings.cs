@@ -68,6 +68,9 @@ public class MedusaStrings : IMedusaStrings
         return cmdStrings.Value;
     }
 
+    public string? GetDescription(CultureInfo? locale = null)
+        => GetText("medusa.description", locale ?? _usCultureInfo);
+
     public static MedusaStrings CreateDefault(string basePath)
         => new MedusaStrings(new LocalMedusaStringsProvider(new(basePath)));
     

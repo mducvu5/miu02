@@ -47,7 +47,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
         _pubSub.Sub(_stringsReload, async _ => await ReloadStringsInternal());
     }
 
-    public IReadOnlyCollection<string> GetAvailableMedusae()
+    public IReadOnlyCollection<string> GetAllMedusae()
     {
         if (!Directory.Exists(BASE_DIR))
             return Array.Empty<string>();
@@ -57,8 +57,30 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
                         .ToArray();
     }
 
-    public IReadOnlyCollection<string> GetLoadedMedusae()
-        => _resolved.Keys.ToArray();
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public IReadOnlyCollection<MedusaStats> GetLoadedMedusae(CultureInfo? culture)
+    {
+        var toReturn = new List<MedusaStats>(_resolved.Count);
+        foreach (var (name, resolvedData) in _resolved)
+        {
+            var sneks = new List<SnekStats>(resolvedData.SnekInfos.Count);
+
+            foreach (var snekInfos in resolvedData.SnekInfos.Concat(resolvedData.SnekInfos.SelectMany(x => x.Subsneks)))
+            {
+                var commands = new List<SnekCommandStats>();
+
+                foreach (var command in snekInfos.Commands)
+                {
+                    commands.Add(new SnekCommandStats(command.Aliases.First()));
+                }
+                
+                sneks.Add(new SnekStats(snekInfos.Name, commands));
+            }
+
+            toReturn.Add(new MedusaStats(name, resolvedData.Strings.GetDescription(culture), sneks));
+        }
+        return toReturn;
+    }
 
     public async Task OnReadyAsync()
     {
@@ -173,7 +195,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
                     {
                         // initialize snek and subsneks
                         await point.Instance.InitializeAsync();
-                        foreach (var sub in point.Submodules)
+                        foreach (var sub in point.Subsneks)
                         {
                             await sub.Instance.InitializeAsync();
                         }
@@ -224,7 +246,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
         {
             behs.Add(new BehaviorAdapter(new(snek.Instance), strings, services));
 
-            foreach (var sub in snek.Submodules)
+            foreach (var sub in snek.Subsneks)
             {
                 behs.Add(new BehaviorAdapter(new(sub.Instance), strings, services));
             }
@@ -350,7 +372,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
                     CreateCommandFactory(medusaName, cmd));
             }
 
-            foreach (var subInfo in snekInfo.Submodules)
+            foreach (var subInfo in snekInfo.Subsneks)
                 m.AddModule(subInfo.Instance.Prefix, CreateModuleFactory(medusaName, subInfo, strings, medusaServices));
         };
 
@@ -528,7 +550,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
             try
             {
                 await si.Instance.DisposeAsync();
-                foreach (var sub in si.Submodules)
+                foreach (var sub in si.Subsneks)
                 {
                     await sub.Instance.DisposeAsync();
                 }  
@@ -651,7 +673,7 @@ public sealed class MedusaLoaderService : IMedusaLoaderService, IReadyExecutor, 
             filters);
 
         if (parentData is not null)
-            parentData.Submodules.Add(module);
+            parentData.Subsneks.Add(module);
 
         return module;
     }

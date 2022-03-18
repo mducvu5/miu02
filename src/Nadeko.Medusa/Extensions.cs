@@ -80,7 +80,7 @@ public static class EmbedBuilderExtensions
 
 public interface IEmbedBuilder
 {
-    IEmbedBuilder WithDescription(string desc);
+    IEmbedBuilder WithDescription(string? desc);
     IEmbedBuilder WithTitle(string title);
     IEmbedBuilder AddField(string title, object value, bool isInline = false);
     IEmbedBuilder WithFooter(string text, string? iconUrl = null);

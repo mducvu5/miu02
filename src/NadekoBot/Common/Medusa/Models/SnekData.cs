@@ -7,5 +7,5 @@ public sealed record SnekData(
     IReadOnlyCollection<SnekCommandData> Commands,
     IReadOnlyCollection<FilterAttribute> Filters)
 {
-    public List<SnekData> Submodules { get; set; } = new();
+    public List<SnekData> Subsneks { get; set; } = new();
 }

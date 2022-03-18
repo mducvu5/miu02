@@ -9,6 +9,15 @@ public interface IMedusaLoaderService
     string GetCommandDescription(string medusaName, string commandName, CultureInfo culture);
     string[] GetCommandUsages(string medusaName, string commandName, CultureInfo culture);
     Task ReloadStrings();
-    IReadOnlyCollection<string> GetAvailableMedusae();
-    IReadOnlyCollection<string> GetLoadedMedusae();
+    IReadOnlyCollection<string> GetAllMedusae();
+    IReadOnlyCollection<MedusaStats> GetLoadedMedusae(CultureInfo? cultureInfo = null);
 }
+
+public sealed record MedusaStats(string Name,
+    string? Description,
+    IReadOnlyCollection<SnekStats> Sneks);
+    
+public sealed record SnekStats(string Name, 
+    IReadOnlyCollection<SnekCommandStats> Commands);
+
+public sealed record SnekCommandStats(string Name);
