@@ -10,9 +10,9 @@ using NadekoBot.Services.Database;
 
 namespace NadekoBot.Migrations
 {
-    [DbContext(typeof(NadekoContext))]
-    [Migration("20220110105942_filter-settings-cleanup")]
-    partial class filtersettingscleanup
+    [DbContext(typeof(NadekoSqliteContext))]
+    [Migration("20220125044401_curtrs-rework-discorduser-defaults")]
+    partial class curtrsreworkdiscorduserdefaults
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -104,7 +104,9 @@ namespace NadekoBot.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("CurrencyAmount")
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0L);
 
                     b.Property<DateTime?>("DateAdded")
                         .HasColumnType("TEXT");
@@ -133,7 +135,9 @@ namespace NadekoBot.Migrations
                         .HasDefaultValue(0);
 
                     b.Property<int>("TotalXp")
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
 
                     b.Property<ulong>("UserId")
                         .HasColumnType("INTEGER");
@@ -504,7 +508,20 @@ namespace NadekoBot.Migrations
                     b.Property<DateTime?>("DateAdded")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Reason")
+                    b.Property<string>("Extra")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong?>("OtherId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValueSql("NULL");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<ulong>("UserId")

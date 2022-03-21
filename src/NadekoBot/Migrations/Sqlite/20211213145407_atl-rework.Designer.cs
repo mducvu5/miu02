@@ -8,9 +8,9 @@ using NadekoBot.Services.Database;
 
 namespace NadekoBot.Migrations
 {
-    [DbContext(typeof(NadekoContext))]
-    [Migration("20211015232708_nsfw-blacklist-tags")]
-    partial class nsfwblacklisttags
+    [DbContext(typeof(NadekoSqliteContext))]
+    [Migration("20211213145407_atl-rework")]
+    partial class atlrework
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -340,6 +340,62 @@ namespace NadekoBot.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AutoCommands");
+                });
+
+            modelBuilder.Entity("NadekoBot.Services.Database.Models.AutoTranslateChannel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AutoDelete")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("ChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("GuildId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChannelId")
+                        .IsUnique();
+
+                    b.HasIndex("GuildId");
+
+                    b.ToTable("AutoTranslateChannels");
+                });
+
+            modelBuilder.Entity("NadekoBot.Services.Database.Models.AutoTranslateUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Target")
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("ChannelId", "UserId");
+
+                    b.ToTable("AutoTranslateUsers");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.BanTemplate", b =>
@@ -1969,6 +2025,11 @@ namespace NadekoBot.Migrations
                     b.Property<ulong>("UserId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("Weight")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("DateAdded");
@@ -2189,6 +2250,17 @@ namespace NadekoBot.Migrations
                         .IsRequired();
 
                     b.Navigation("GuildConfig");
+                });
+
+            modelBuilder.Entity("NadekoBot.Services.Database.Models.AutoTranslateUser", b =>
+                {
+                    b.HasOne("NadekoBot.Services.Database.Models.AutoTranslateChannel", "Channel")
+                        .WithMany("Users")
+                        .HasForeignKey("ChannelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Channel");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.CommandAlias", b =>
@@ -2536,6 +2608,11 @@ namespace NadekoBot.Migrations
             modelBuilder.Entity("NadekoBot.Services.Database.Models.AntiSpamSetting", b =>
                 {
                     b.Navigation("IgnoredChannels");
+                });
+
+            modelBuilder.Entity("NadekoBot.Services.Database.Models.AutoTranslateChannel", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.GuildConfig", b =>

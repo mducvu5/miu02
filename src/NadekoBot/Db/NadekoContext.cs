@@ -1,4 +1,5 @@
 #nullable disable
+using LinqToDB;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -10,23 +11,92 @@ using NadekoBot.Services.Database.Models;
 
 namespace NadekoBot.Services.Database;
 
-public class NadekoContextFactory : IDesignTimeDbContextFactory<NadekoContext>
+public static class SqliteHelper
 {
-    public NadekoContext CreateDbContext(string[] args)
+    public static string FixConnectionString(string connStr)
     {
-        LogSetup.SetupLogger(-2);
-        var optionsBuilder = new DbContextOptionsBuilder<NadekoContext>();
-        var creds = new BotCredsProvider().GetCreds();
-        var builder = new SqliteConnectionStringBuilder(creds.Db.ConnectionString);
+        var builder = new SqliteConnectionStringBuilder(connStr);
         builder.DataSource = Path.Combine(AppContext.BaseDirectory, builder.DataSource);
-        optionsBuilder.UseSqlite(builder.ToString());
-        var ctx = new NadekoContext(optionsBuilder.Options);
-        ctx.Database.SetCommandTimeout(60);
-        return ctx;
+        return builder.ToString();
     }
 }
 
-public class NadekoContext : DbContext
+// public class NadekoContextFactory : IDesignTimeDbContextFactory<NadekoContext>
+// {
+//     public NadekoContext CreateDbContext(string[] args)
+//     {
+//         LogSetup.SetupLogger(-2);
+//         var optionsBuilder = new DbContextOptionsBuilder<NadekoContext>();
+//         var creds = new BotCredsProvider().GetCreds();
+//         NadekoContext ctx;
+//         // if (creds.Db.Type.Equals("mysql", StringComparison.InvariantCultureIgnoreCase))
+//         // {
+//         //     optionsBuilder.UseMySql(creds.Db.ConnectionString, ServerVersion.AutoDetect(creds.Db.ConnectionString));
+//         // }
+//         // else if (creds.Db.Type.Equals("postgres", StringComparison.InvariantCultureIgnoreCase))
+//         // {
+//         //     optionsBuilder.UseNpgsql(creds.Db.ConnectionString);
+//         //     ctx = new PostgresNadekoContext(optionsBuilder.Options);
+//         // }
+//         // else // otherwise use sqlite
+//         // {
+//         // }
+//         
+//         ctx = new NadekoContext(SqliteHelper.FixConnectionString(creds.Db.ConnectionString));
+//         ctx.Database.SetCommandTimeout(0);
+//         return ctx;
+//     }
+// }
+
+public sealed class NadekoSqliteContext : NadekoContext
+{
+    private readonly string _connectionString;
+
+    public NadekoSqliteContext(string connectionString = "Data Source=data/NadekoBot.db", int commandTimeout = 60)
+    {
+        _connectionString = connectionString;
+        Database.SetCommandTimeout(commandTimeout);
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        var connStrBuilder = new SqliteConnectionStringBuilder(_connectionString);
+        connStrBuilder.DataSource = Path.Combine(AppContext.BaseDirectory, connStrBuilder.DataSource);
+        var connString = connStrBuilder.ToString();
+        optionsBuilder.UseSqlite(connString);
+        base.OnConfiguring(optionsBuilder);
+    }
+}
+
+public sealed class NadekoPostgresContext : NadekoContext
+{
+    private readonly string _connStr;
+
+    public NadekoPostgresContext(string connStr = "Host=localhost")
+    {
+        _connStr = connStr;
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.UseNpgsql(_connStr);
+}
+
+public sealed class NadekoMysqlContext : NadekoContext
+{
+    private readonly string _connStr;
+    private readonly string _version;
+
+    public NadekoMysqlContext(string connStr = "Server=localhost", string version = "8.0")
+    {
+        _connStr = connStr;
+        _version = version;
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.UseMySql(_connStr, ServerVersion.Parse(_version));
+}
+
+public abstract class NadekoContext : DbContext
 {
     public DbSet<GuildConfig> GuildConfigs { get; set; }
 
@@ -68,11 +138,6 @@ public class NadekoContext : DbContext
     public DbSet<AutoTranslateUser> AutoTranslateUsers { get; set; }
 
     public DbSet<Permissionv2> Permissions { get; set; }
-
-    public NadekoContext(DbContextOptions<NadekoContext> options)
-        : base(options)
-    {
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -170,7 +235,7 @@ public class NadekoContext : DbContext
               .HasDefaultValueSql("datetime('now', '-1 years')");
 
             du.Property(x => x.LastLevelUp)
-              .HasDefaultValueSql("datetime('now')");
+              .HasDefaultValue(Sql.CurrentTimestampUtc);
 
             du.Property(x => x.TotalXp)
               .HasDefaultValue(0);

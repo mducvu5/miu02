@@ -8,52 +8,47 @@ namespace NadekoBot.Services;
 
 public class DbService
 {
-    private readonly DbContextOptions<NadekoContext> _options;
-    private readonly DbContextOptions<NadekoContext> _migrateOptions;
+    private readonly DbContextOptions<NadekoSqliteContext> _options;
+    private readonly DbContextOptions<NadekoSqliteContext> _migrateOptions;
+    private readonly IBotCredentials _creds;
 
     public DbService(IBotCredentials creds)
     {
         LinqToDBForEFTools.Initialize();
-
-        var builder = new SqliteConnectionStringBuilder(creds.Db.ConnectionString);
-        builder.DataSource = Path.Combine(AppContext.BaseDirectory, builder.DataSource);
-
-        var optionsBuilder = new DbContextOptionsBuilder<NadekoContext>();
-        optionsBuilder.UseSqlite(builder.ToString());
-        _options = optionsBuilder.Options;
-
-        optionsBuilder = new();
-        optionsBuilder.UseSqlite(builder.ToString());
-        _migrateOptions = optionsBuilder.Options;
+        _creds = creds;
     }
 
-    public void Setup()
+    public async Task Setup()
     {
-        using var context = new NadekoContext(_options);
-        if (context.Database.GetPendingMigrations().Any())
+        await using var context = new NadekoSqliteContext(_creds.Db.ConnectionString);
+        var migrations = await context.Database.GetPendingMigrationsAsync();
+        if (migrations.Any())
         {
-            var mContext = new NadekoContext(_migrateOptions);
-            mContext.Database.Migrate();
-            mContext.SaveChanges();
-            mContext.Dispose();
+            // wait indefinitely for migrations
+            // as they might take a very long time
+            await using var mContext = new NadekoSqliteContext(_creds.Db.ConnectionString, 0);
+            await mContext.Database.MigrateAsync();
+            await mContext.SaveChangesAsync();
         }
 
-        context.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL");
-        context.SaveChanges();
+        await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL");
+        await context.SaveChangesAsync();
     }
 
-    private NadekoContext GetDbContextInternal()
+    private NadekoSqliteContext GetDbContextInternal()
     {
-        var context = new NadekoContext(_options);
-        context.Database.SetCommandTimeout(60);
+        var dbType = _creds.Db.Type;
+        var connString = _creds.Db.ConnectionString;
+        
+        var context = new NadekoSqliteContext(connString);
         var conn = context.Database.GetDbConnection();
         conn.Open();
         using var com = conn.CreateCommand();
-        com.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=OFF";
+        com.CommandText = "PRAGMA synchronous=OFF";
         com.ExecuteNonQuery();
         return context;
     }
 
-    public NadekoContext GetDbContext()
+    public NadekoSqliteContext GetDbContext()
         => GetDbContextInternal();
 }
