@@ -6,10 +6,11 @@ public static class CurrencyServiceExtensions
 {
     public static async Task<long> GetBalanceAsync(this ICurrencyService cs, ulong userId)
     {
-        await using var wallet = await cs.GetWalletAsync(userId);
+        var wallet = await cs.GetWalletAsync(userId);
         return await wallet.GetBalance();
     }
     
+    // todo transfer should be a transaction
     public static async Task<bool> TransferAsync(
         this ICurrencyService cs,
         ulong fromId,
@@ -18,8 +19,8 @@ public static class CurrencyServiceExtensions
         string fromName,
         string note)
     {
-        await using var fromWallet = await cs.GetWalletAsync(fromId);
-        await using var toWallet = await cs.GetWalletAsync(toId);
+        var fromWallet = await cs.GetWalletAsync(fromId);
+        var toWallet = await cs.GetWalletAsync(toId);
 
         var extra = new TxData("gift", fromName, note, fromId);
 

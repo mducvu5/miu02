@@ -1,6 +1,5 @@
 #nullable disable
 using LinqToDB.EntityFrameworkCore;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NadekoBot.Services.Database;
 
@@ -24,9 +23,8 @@ public class DbService
         var migrations = await context.Database.GetPendingMigrationsAsync();
         if (migrations.Any())
         {
-            // wait indefinitely for migrations
-            // as they might take a very long time
             await using var mContext = new NadekoSqliteContext(_creds.Db.ConnectionString, 0);
+            await mContext.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL");
             await mContext.Database.MigrateAsync();
             await mContext.SaveChangesAsync();
         }

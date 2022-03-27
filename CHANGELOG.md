@@ -7,6 +7,21 @@ Experimental changelog. Mostly based on [keepachangelog](https://keepachangelog.
 
 - More cool stuff coming soon
 
+## [4.0.6] - 21.03.2022
+
+### Fixes
+
+- Fixed voice presence logging
+- Fixed .clubaccept, .clubban, .clubkick and .clubunban commands
+
+## [4.0.5] - 21.03.2022
+
+### Fixes
+
+- Fixed several bugs in the currency code
+- Fixed some potential memory leaks
+- Fixed some response strings
+
 ## [4.0.4] - 04.03.2022
 
 ### Fixed
