@@ -8,7 +8,7 @@ using NadekoBot.Services.Database;
 
 namespace NadekoBot.Migrations
 {
-    [DbContext(typeof(NadekoSqliteContext))]
+    [DbContext(typeof(SqliteContext))]
     [Migration("20210912200106_logsettings-independence")]
     partial class logsettingsindependence
     {

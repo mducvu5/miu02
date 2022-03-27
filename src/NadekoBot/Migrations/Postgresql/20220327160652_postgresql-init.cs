@@ -1,536 +1,471 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace NadekoBot.Migrations.MySql
+namespace NadekoBot.Migrations.PostgreSql
 {
-    public partial class init : Migration
+    public partial class postgresqlinit : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterDatabase()
-                .Annotation("MySql:CharSet", "utf8mb4");
-
             migrationBuilder.CreateTable(
                 name: "AutoCommands",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    CommandText = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ChannelName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    GuildName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    VoiceChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    VoiceChannelName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Interval = table.Column<int>(type: "int", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CommandText = table.Column<string>(type: "text", nullable: true),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ChannelName = table.Column<string>(type: "text", nullable: true),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    GuildName = table.Column<string>(type: "text", nullable: true),
+                    VoiceChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    VoiceChannelName = table.Column<string>(type: "text", nullable: true),
+                    Interval = table.Column<int>(type: "integer", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AutoCommands", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "AutoTranslateChannels",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    AutoDelete = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    AutoDelete = table.Column<bool>(type: "boolean", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AutoTranslateChannels", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "BanTemplates",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Text = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Text = table.Column<string>(type: "text", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BanTemplates", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "Blacklist",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    ItemId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Type = table.Column<int>(type: "int", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ItemId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Blacklist", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "CurrencyTransactions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Amount = table.Column<long>(type: "bigint", nullable: false),
-                    Note = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Type = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Extra = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    OtherId = table.Column<ulong>(type: "bigint unsigned", nullable: true, defaultValueSql: "NULL"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Note = table.Column<string>(type: "text", nullable: true),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Type = table.Column<string>(type: "text", nullable: false),
+                    Extra = table.Column<string>(type: "text", nullable: false),
+                    OtherId = table.Column<decimal>(type: "numeric(20,0)", nullable: true, defaultValueSql: "NULL"),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CurrencyTransactions", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "DiscordPermOverrides",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Perm = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    Command = table.Column<string>(type: "varchar(255)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Perm = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    Command = table.Column<string>(type: "text", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DiscordPermOverrides", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "Expressions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    Response = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Trigger = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AutoDeleteTrigger = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    DmResponse = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    ContainsAnywhere = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    AllowTarget = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    Reactions = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    Response = table.Column<string>(type: "text", nullable: true),
+                    Trigger = table.Column<string>(type: "text", nullable: true),
+                    AutoDeleteTrigger = table.Column<bool>(type: "boolean", nullable: false),
+                    DmResponse = table.Column<bool>(type: "boolean", nullable: false),
+                    ContainsAnywhere = table.Column<bool>(type: "boolean", nullable: false),
+                    AllowTarget = table.Column<bool>(type: "boolean", nullable: false),
+                    Reactions = table.Column<string>(type: "text", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Expressions", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "GuildConfigs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Prefix = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DeleteMessageOnCommand = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    AutoAssignRoleIds = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AutoDeleteGreetMessagesTimer = table.Column<int>(type: "int", nullable: false),
-                    AutoDeleteByeMessagesTimer = table.Column<int>(type: "int", nullable: false),
-                    GreetMessageChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ByeMessageChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    SendDmGreetMessage = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    DmGreetMessageText = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    SendChannelGreetMessage = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    ChannelGreetMessageText = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    SendChannelByeMessage = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    ChannelByeMessageText = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ExclusiveSelfAssignedRoles = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    AutoDeleteSelfAssignedRoleMessages = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    VerbosePermissions = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    PermissionRole = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    FilterInvites = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    FilterLinks = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    FilterWords = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    MuteRoleName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    CleverbotEnabled = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    Locale = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    TimeZoneId = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    WarningsInitialized = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    GameVoiceChannel = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    VerboseErrors = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    NotifyStreamOffline = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    WarnExpireHours = table.Column<int>(type: "int", nullable: false),
-                    WarnExpireAction = table.Column<int>(type: "int", nullable: false),
-                    SendBoostMessage = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    BoostMessage = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    BoostMessageChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    BoostMessageDeleteAfter = table.Column<int>(type: "int", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Prefix = table.Column<string>(type: "text", nullable: true),
+                    DeleteMessageOnCommand = table.Column<bool>(type: "boolean", nullable: false),
+                    AutoAssignRoleIds = table.Column<string>(type: "text", nullable: true),
+                    AutoDeleteGreetMessagesTimer = table.Column<int>(type: "integer", nullable: false),
+                    AutoDeleteByeMessagesTimer = table.Column<int>(type: "integer", nullable: false),
+                    GreetMessageChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ByeMessageChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    SendDmGreetMessage = table.Column<bool>(type: "boolean", nullable: false),
+                    DmGreetMessageText = table.Column<string>(type: "text", nullable: true),
+                    SendChannelGreetMessage = table.Column<bool>(type: "boolean", nullable: false),
+                    ChannelGreetMessageText = table.Column<string>(type: "text", nullable: true),
+                    SendChannelByeMessage = table.Column<bool>(type: "boolean", nullable: false),
+                    ChannelByeMessageText = table.Column<string>(type: "text", nullable: true),
+                    ExclusiveSelfAssignedRoles = table.Column<bool>(type: "boolean", nullable: false),
+                    AutoDeleteSelfAssignedRoleMessages = table.Column<bool>(type: "boolean", nullable: false),
+                    VerbosePermissions = table.Column<bool>(type: "boolean", nullable: false),
+                    PermissionRole = table.Column<string>(type: "text", nullable: true),
+                    FilterInvites = table.Column<bool>(type: "boolean", nullable: false),
+                    FilterLinks = table.Column<bool>(type: "boolean", nullable: false),
+                    FilterWords = table.Column<bool>(type: "boolean", nullable: false),
+                    MuteRoleName = table.Column<string>(type: "text", nullable: true),
+                    CleverbotEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    Locale = table.Column<string>(type: "text", nullable: true),
+                    TimeZoneId = table.Column<string>(type: "text", nullable: true),
+                    WarningsInitialized = table.Column<bool>(type: "boolean", nullable: false),
+                    GameVoiceChannel = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    VerboseErrors = table.Column<bool>(type: "boolean", nullable: false),
+                    NotifyStreamOffline = table.Column<bool>(type: "boolean", nullable: false),
+                    WarnExpireHours = table.Column<int>(type: "integer", nullable: false),
+                    WarnExpireAction = table.Column<int>(type: "integer", nullable: false),
+                    SendBoostMessage = table.Column<bool>(type: "boolean", nullable: false),
+                    BoostMessage = table.Column<string>(type: "text", nullable: true),
+                    BoostMessageChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    BoostMessageDeleteAfter = table.Column<int>(type: "integer", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_GuildConfigs", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "ImageOnlyChannels",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ImageOnlyChannels", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "LogSettings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    LogOtherId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    MessageUpdatedId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    MessageDeletedId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    UserJoinedId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    UserLeftId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    UserBannedId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    UserUnbannedId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    UserUpdatedId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    ChannelCreatedId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    ChannelDestroyedId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    ChannelUpdatedId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    UserMutedId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    LogUserPresenceId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    LogVoicePresenceId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    LogVoicePresenceTTSId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    LogOtherId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    MessageUpdatedId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    MessageDeletedId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    UserJoinedId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    UserLeftId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    UserBannedId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    UserUnbannedId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    UserUpdatedId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    ChannelCreatedId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    ChannelDestroyedId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    ChannelUpdatedId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    UserMutedId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    LogUserPresenceId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    LogVoicePresenceId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    LogVoicePresenceTTSId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_LogSettings", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "MusicPlayerSettings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    PlayerRepeat = table.Column<int>(type: "int", nullable: false),
-                    MusicChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    Volume = table.Column<int>(type: "int", nullable: false, defaultValue: 100),
-                    AutoDisconnect = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    QualityPreset = table.Column<int>(type: "int", nullable: false),
-                    AutoPlay = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    PlayerRepeat = table.Column<int>(type: "integer", nullable: false),
+                    MusicChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    Volume = table.Column<int>(type: "integer", nullable: false, defaultValue: 100),
+                    AutoDisconnect = table.Column<bool>(type: "boolean", nullable: false),
+                    QualityPreset = table.Column<int>(type: "integer", nullable: false),
+                    AutoPlay = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MusicPlayerSettings", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "MusicPlaylists",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Author = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AuthorId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: true),
+                    Author = table.Column<string>(type: "text", nullable: true),
+                    AuthorId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MusicPlaylists", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "NsfwBlacklistedTags",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Tag = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Tag = table.Column<string>(type: "text", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_NsfwBlacklistedTags", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "PlantedCurrency",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Amount = table.Column<long>(type: "bigint", nullable: false),
-                    Password = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    MessageId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Password = table.Column<string>(type: "text", nullable: true),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    MessageId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PlantedCurrency", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "Poll",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Question = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Question = table.Column<string>(type: "text", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Poll", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "Quotes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Keyword = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AuthorName = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AuthorId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Text = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Keyword = table.Column<string>(type: "text", nullable: false),
+                    AuthorName = table.Column<string>(type: "text", nullable: false),
+                    AuthorId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Text = table.Column<string>(type: "text", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Quotes", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "Reminders",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    When = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ServerId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Message = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    IsPrivate = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    When = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ServerId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Message = table.Column<string>(type: "text", nullable: true),
+                    IsPrivate = table.Column<bool>(type: "boolean", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Reminders", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "Repeaters",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    LastMessageId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    Message = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Interval = table.Column<TimeSpan>(type: "time(6)", nullable: false),
-                    StartTimeOfDay = table.Column<TimeSpan>(type: "time(6)", nullable: true),
-                    NoRedundant = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    LastMessageId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    Message = table.Column<string>(type: "text", nullable: true),
+                    Interval = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    StartTimeOfDay = table.Column<TimeSpan>(type: "interval", nullable: true),
+                    NoRedundant = table.Column<bool>(type: "boolean", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Repeaters", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "RewardedUsers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    PatreonUserId = table.Column<string>(type: "varchar(255)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AmountRewardedThisMonth = table.Column<int>(type: "int", nullable: false),
-                    LastReward = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    PatreonUserId = table.Column<string>(type: "text", nullable: true),
+                    AmountRewardedThisMonth = table.Column<int>(type: "integer", nullable: false),
+                    LastReward = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RewardedUsers", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "RotatingStatus",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Status = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Type = table.Column<int>(type: "int", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Status = table.Column<string>(type: "text", nullable: true),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RotatingStatus", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "SelfAssignableRoles",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    RoleId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Group = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
-                    LevelRequirement = table.Column<int>(type: "int", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    RoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Group = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    LevelRequirement = table.Column<int>(type: "integer", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SelfAssignableRoles", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "UserXpStats",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Xp = table.Column<int>(type: "int", nullable: false),
-                    AwardedXp = table.Column<int>(type: "int", nullable: false),
-                    NotifyOnLevelUp = table.Column<int>(type: "int", nullable: false),
-                    LastLevelUp = table.Column<DateTime>(type: "datetime(6)", nullable: false, defaultValue: new DateTime(2017, 9, 21, 20, 53, 13, 307, DateTimeKind.Local)),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Xp = table.Column<int>(type: "integer", nullable: false),
+                    AwardedXp = table.Column<int>(type: "integer", nullable: false),
+                    NotifyOnLevelUp = table.Column<int>(type: "integer", nullable: false),
+                    LastLevelUp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValue: new DateTime(2017, 9, 21, 20, 53, 13, 307, DateTimeKind.Local)),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_UserXpStats", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "Warnings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Reason = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Forgiven = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    ForgivenBy = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Moderator = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Reason = table.Column<string>(type: "text", nullable: true),
+                    Forgiven = table.Column<bool>(type: "boolean", nullable: false),
+                    ForgivenBy = table.Column<string>(type: "text", nullable: true),
+                    Moderator = table.Column<string>(type: "text", nullable: true),
                     Weight = table.Column<long>(type: "bigint", nullable: false, defaultValue: 1L),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Warnings", x => x.Id);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "AutoTranslateUsers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    ChannelId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Source = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Target = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChannelId = table.Column<int>(type: "integer", nullable: false),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Source = table.Column<string>(type: "text", nullable: true),
+                    Target = table.Column<string>(type: "text", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -542,20 +477,19 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "AutoTranslateChannels",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "AntiAltSetting",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: false),
-                    MinAge = table.Column<TimeSpan>(type: "time(6)", nullable: false),
-                    Action = table.Column<int>(type: "int", nullable: false),
-                    ActionDurationMinutes = table.Column<int>(type: "int", nullable: false),
-                    RoleId = table.Column<ulong>(type: "bigint unsigned", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: false),
+                    MinAge = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    Action = table.Column<int>(type: "integer", nullable: false),
+                    ActionDurationMinutes = table.Column<int>(type: "integer", nullable: false),
+                    RoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -566,21 +500,20 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "GuildConfigs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "AntiRaidSetting",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: false),
-                    UserThreshold = table.Column<int>(type: "int", nullable: false),
-                    Seconds = table.Column<int>(type: "int", nullable: false),
-                    Action = table.Column<int>(type: "int", nullable: false),
-                    PunishDuration = table.Column<int>(type: "int", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: false),
+                    UserThreshold = table.Column<int>(type: "integer", nullable: false),
+                    Seconds = table.Column<int>(type: "integer", nullable: false),
+                    Action = table.Column<int>(type: "integer", nullable: false),
+                    PunishDuration = table.Column<int>(type: "integer", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -591,21 +524,20 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "GuildConfigs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "AntiSpamSetting",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: false),
-                    Action = table.Column<int>(type: "int", nullable: false),
-                    MessageThreshold = table.Column<int>(type: "int", nullable: false),
-                    MuteTime = table.Column<int>(type: "int", nullable: false),
-                    RoleId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: false),
+                    Action = table.Column<int>(type: "integer", nullable: false),
+                    MessageThreshold = table.Column<int>(type: "integer", nullable: false),
+                    MuteTime = table.Column<int>(type: "integer", nullable: false),
+                    RoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -616,21 +548,18 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "GuildConfigs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "CommandAlias",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Trigger = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Mapping = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Trigger = table.Column<string>(type: "text", nullable: true),
+                    Mapping = table.Column<string>(type: "text", nullable: true),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -640,20 +569,18 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "CommandCooldown",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Seconds = table.Column<int>(type: "int", nullable: false),
-                    CommandName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Seconds = table.Column<int>(type: "integer", nullable: false),
+                    CommandName = table.Column<string>(type: "text", nullable: true),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -663,19 +590,18 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "DelMsgOnCmdChannel",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    State = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    State = table.Column<bool>(type: "boolean", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -685,20 +611,18 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "FeedSub",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: false),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Url = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: false),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Url = table.Column<string>(type: "text", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -710,18 +634,17 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "GuildConfigs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "FilterChannelId",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -731,19 +654,17 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "FilteredWord",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Word = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Word = table.Column<string>(type: "text", nullable: true),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -753,18 +674,17 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "FilterLinksChannelId",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -774,18 +694,17 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "FilterWordsChannelId",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -795,24 +714,21 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "FollowedStream",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Username = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Type = table.Column<int>(type: "int", nullable: false),
-                    Message = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Username = table.Column<string>(type: "text", nullable: true),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Message = table.Column<string>(type: "text", nullable: true),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -822,18 +738,17 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "GCChannelId",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -843,20 +758,18 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "GroupName",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: false),
-                    Number = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: false),
+                    Number = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -867,18 +780,17 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "GuildConfigs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "MutedUserId",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -888,25 +800,23 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "Permissions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    Index = table.Column<int>(type: "int", nullable: false),
-                    PrimaryTarget = table.Column<int>(type: "int", nullable: false),
-                    PrimaryTargetId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    SecondaryTarget = table.Column<int>(type: "int", nullable: false),
-                    SecondaryTargetName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    IsCustomCommand = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    State = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    Index = table.Column<int>(type: "integer", nullable: false),
+                    PrimaryTarget = table.Column<int>(type: "integer", nullable: false),
+                    PrimaryTargetId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    SecondaryTarget = table.Column<int>(type: "integer", nullable: false),
+                    SecondaryTargetName = table.Column<string>(type: "text", nullable: true),
+                    IsCustomCommand = table.Column<bool>(type: "boolean", nullable: false),
+                    State = table.Column<bool>(type: "boolean", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -916,21 +826,20 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "ReactionRoleMessage",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Index = table.Column<int>(type: "int", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: false),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    MessageId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Exclusive = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Index = table.Column<int>(type: "integer", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: false),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    MessageId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Exclusive = table.Column<bool>(type: "boolean", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -941,26 +850,23 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "GuildConfigs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "ShopEntry",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Index = table.Column<int>(type: "int", nullable: false),
-                    Price = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AuthorId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Type = table.Column<int>(type: "int", nullable: false),
-                    RoleName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    RoleId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Index = table.Column<int>(type: "integer", nullable: false),
+                    Price = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: true),
+                    AuthorId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    RoleName = table.Column<string>(type: "text", nullable: true),
+                    RoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -970,18 +876,17 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "SlowmodeIgnoredRole",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    RoleId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    RoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -991,18 +896,17 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "SlowmodeIgnoredUser",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1012,22 +916,20 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "StreamRoleSettings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: false),
-                    Enabled = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    AddRoleId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    FromRoleId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Keyword = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: false),
+                    Enabled = table.Column<bool>(type: "boolean", nullable: false),
+                    AddRoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    FromRoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Keyword = table.Column<string>(type: "text", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1038,19 +940,18 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "GuildConfigs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "UnbanTimer",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    UnbanAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    UnbanAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1060,19 +961,18 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "UnmuteTimer",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    UnmuteAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    UnmuteAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1082,20 +982,19 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "UnroleTimer",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    RoleId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    UnbanAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    RoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    UnbanAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1105,19 +1004,18 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "VcRoleInfo",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    VoiceChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    RoleId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    VoiceChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    RoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1127,21 +1025,20 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "WarningPunishment",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Count = table.Column<int>(type: "int", nullable: false),
-                    Punishment = table.Column<int>(type: "int", nullable: false),
-                    Time = table.Column<int>(type: "int", nullable: false),
-                    RoleId = table.Column<ulong>(type: "bigint unsigned", nullable: true),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Count = table.Column<int>(type: "integer", nullable: false),
+                    Punishment = table.Column<int>(type: "integer", nullable: false),
+                    Time = table.Column<int>(type: "integer", nullable: false),
+                    RoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: true),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1151,18 +1048,17 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.GuildConfigId,
                         principalTable: "GuildConfigs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "XpSettings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    GuildConfigId = table.Column<int>(type: "int", nullable: false),
-                    ServerExcluded = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    GuildConfigId = table.Column<int>(type: "integer", nullable: false),
+                    ServerExcluded = table.Column<bool>(type: "boolean", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1173,19 +1069,18 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "GuildConfigs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "IgnoredLogChannels",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    LogSettingId = table.Column<int>(type: "int", nullable: false),
-                    LogItemId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ItemType = table.Column<int>(type: "int", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    LogSettingId = table.Column<int>(type: "integer", nullable: false),
+                    LogItemId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ItemType = table.Column<int>(type: "integer", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1196,18 +1091,17 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "LogSettings",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "IgnoredVoicePresenceCHannels",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    LogSettingId = table.Column<int>(type: "int", nullable: true),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    LogSettingId = table.Column<int>(type: "integer", nullable: true),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1217,26 +1111,21 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.LogSettingId,
                         principalTable: "LogSettings",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "PlaylistSong",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Provider = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ProviderType = table.Column<int>(type: "int", nullable: false),
-                    Title = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Uri = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Query = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    MusicPlaylistId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Provider = table.Column<string>(type: "text", nullable: true),
+                    ProviderType = table.Column<int>(type: "integer", nullable: false),
+                    Title = table.Column<string>(type: "text", nullable: true),
+                    Uri = table.Column<string>(type: "text", nullable: true),
+                    Query = table.Column<string>(type: "text", nullable: true),
+                    MusicPlaylistId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1247,20 +1136,18 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "MusicPlaylists",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "PollAnswer",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Index = table.Column<int>(type: "int", nullable: false),
-                    Text = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    PollId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Index = table.Column<int>(type: "integer", nullable: false),
+                    Text = table.Column<string>(type: "text", nullable: true),
+                    PollId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1270,19 +1157,18 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.PollId,
                         principalTable: "Poll",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "PollVote",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    VoteIndex = table.Column<int>(type: "int", nullable: false),
-                    PollId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    VoteIndex = table.Column<int>(type: "integer", nullable: false),
+                    PollId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1292,18 +1178,17 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.PollId,
                         principalTable: "Poll",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "AntiSpamIgnore",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    ChannelId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    AntiSpamSettingId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    AntiSpamSettingId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1313,20 +1198,18 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.AntiSpamSettingId,
                         principalTable: "AntiSpamSetting",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "ReactionRole",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    EmoteName = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    RoleId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ReactionRoleMessageId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    EmoteName = table.Column<string>(type: "text", nullable: true),
+                    RoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ReactionRoleMessageId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1337,19 +1220,17 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "ReactionRoleMessage",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "ShopEntryItem",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Text = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ShopEntryId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Text = table.Column<string>(type: "text", nullable: true),
+                    ShopEntryId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1359,65 +1240,60 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.ShopEntryId,
                         principalTable: "ShopEntry",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "StreamRoleBlacklistedUser",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Username = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    StreamRoleSettingsId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Username = table.Column<string>(type: "text", nullable: true),
+                    StreamRoleSettingsId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_StreamRoleBlacklistedUser", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_StreamRoleBlacklistedUser_StreamRoleSettings_StreamRoleSetti~",
+                        name: "FK_StreamRoleBlacklistedUser_StreamRoleSettings_StreamRoleSett~",
                         column: x => x.StreamRoleSettingsId,
                         principalTable: "StreamRoleSettings",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "StreamRoleWhitelistedUser",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Username = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    StreamRoleSettingsId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Username = table.Column<string>(type: "text", nullable: true),
+                    StreamRoleSettingsId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_StreamRoleWhitelistedUser", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_StreamRoleWhitelistedUser_StreamRoleSettings_StreamRoleSetti~",
+                        name: "FK_StreamRoleWhitelistedUser_StreamRoleSettings_StreamRoleSett~",
                         column: x => x.StreamRoleSettingsId,
                         principalTable: "StreamRoleSettings",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "ExcludedItem",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    ItemId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    ItemType = table.Column<int>(type: "int", nullable: false),
-                    XpSettingsId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ItemId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    ItemType = table.Column<int>(type: "integer", nullable: false),
+                    XpSettingsId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1427,19 +1303,18 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.XpSettingsId,
                         principalTable: "XpSettings",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "XpCurrencyReward",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    XpSettingsId = table.Column<int>(type: "int", nullable: false),
-                    Level = table.Column<int>(type: "int", nullable: false),
-                    Amount = table.Column<int>(type: "int", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    XpSettingsId = table.Column<int>(type: "integer", nullable: false),
+                    Level = table.Column<int>(type: "integer", nullable: false),
+                    Amount = table.Column<int>(type: "integer", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1450,20 +1325,19 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "XpSettings",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "XpRoleReward",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    XpSettingsId = table.Column<int>(type: "int", nullable: false),
-                    Level = table.Column<int>(type: "int", nullable: false),
-                    RoleId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Remove = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    XpSettingsId = table.Column<int>(type: "integer", nullable: false),
+                    Level = table.Column<int>(type: "integer", nullable: false),
+                    RoleId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Remove = table.Column<bool>(type: "boolean", nullable: false),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1474,81 +1348,71 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "XpSettings",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "ClubApplicants",
                 columns: table => new
                 {
-                    ClubId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false)
+                    ClubId = table.Column<int>(type: "integer", nullable: false),
+                    UserId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ClubApplicants", x => new { x.ClubId, x.UserId });
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "ClubBans",
                 columns: table => new
                 {
-                    ClubId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false)
+                    ClubId = table.Column<int>(type: "integer", nullable: false),
+                    UserId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ClubBans", x => new { x.ClubId, x.UserId });
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "Clubs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Discrim = table.Column<int>(type: "int", nullable: false),
-                    ImageUrl = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    MinimumLevelReq = table.Column<int>(type: "int", nullable: false),
-                    Xp = table.Column<int>(type: "int", nullable: false),
-                    OwnerId = table.Column<int>(type: "int", nullable: false),
-                    Description = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Discrim = table.Column<int>(type: "integer", nullable: false),
+                    ImageUrl = table.Column<string>(type: "text", nullable: true),
+                    MinimumLevelReq = table.Column<int>(type: "integer", nullable: false),
+                    Xp = table.Column<int>(type: "integer", nullable: false),
+                    OwnerId = table.Column<int>(type: "integer", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Clubs", x => x.Id);
                     table.UniqueConstraint("AK_Clubs_Name_Discrim", x => new { x.Name, x.Discrim });
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "DiscordUser",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Username = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Discriminator = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    AvatarId = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    ClubId = table.Column<int>(type: "int", nullable: true),
-                    IsClubAdmin = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
-                    TotalXp = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
-                    LastLevelUp = table.Column<DateTime>(type: "datetime(6)", nullable: false, defaultValue: new DateTime(2022, 3, 21, 0, 19, 3, 449, DateTimeKind.Utc).AddTicks(4545)),
-                    LastXpGain = table.Column<DateTime>(type: "datetime(6)", nullable: false, defaultValueSql: "datetime('now', '-1 years')"),
-                    NotifyOnLevelUp = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Username = table.Column<string>(type: "text", nullable: true),
+                    Discriminator = table.Column<string>(type: "text", nullable: true),
+                    AvatarId = table.Column<string>(type: "text", nullable: true),
+                    ClubId = table.Column<int>(type: "integer", nullable: true),
+                    IsClubAdmin = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    TotalXp = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    LastLevelUp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "timezone('utc', now())"),
+                    LastXpGain = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "timezone('utc', now()) - interval '-1 year'"),
+                    NotifyOnLevelUp = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     CurrencyAmount = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1559,20 +1423,19 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.ClubId,
                         principalTable: "Clubs",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "WaifuInfo",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    WaifuId = table.Column<int>(type: "int", nullable: false),
-                    ClaimerId = table.Column<int>(type: "int", nullable: true),
-                    AffinityId = table.Column<int>(type: "int", nullable: true),
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    WaifuId = table.Column<int>(type: "integer", nullable: false),
+                    ClaimerId = table.Column<int>(type: "integer", nullable: true),
+                    AffinityId = table.Column<int>(type: "integer", nullable: true),
                     Price = table.Column<long>(type: "bigint", nullable: false),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1593,20 +1456,19 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "DiscordUser",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "WaifuUpdates",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    UpdateType = table.Column<int>(type: "int", nullable: false),
-                    OldId = table.Column<int>(type: "int", nullable: true),
-                    NewId = table.Column<int>(type: "int", nullable: true),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    UpdateType = table.Column<int>(type: "integer", nullable: false),
+                    OldId = table.Column<int>(type: "integer", nullable: true),
+                    NewId = table.Column<int>(type: "integer", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1627,21 +1489,18 @@ namespace NadekoBot.Migrations.MySql
                         principalTable: "DiscordUser",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateTable(
                 name: "WaifuItem",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    WaifuInfoId = table.Column<int>(type: "int", nullable: true),
-                    ItemEmoji = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Name = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    WaifuInfoId = table.Column<int>(type: "integer", nullable: true),
+                    ItemEmoji = table.Column<string>(type: "text", nullable: true),
+                    Name = table.Column<string>(type: "text", nullable: true),
+                    DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1651,8 +1510,7 @@ namespace NadekoBot.Migrations.MySql
                         column: x => x.WaifuInfoId,
                         principalTable: "WaifuInfo",
                         principalColumn: "Id");
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AntiAltSetting_GuildConfigId",

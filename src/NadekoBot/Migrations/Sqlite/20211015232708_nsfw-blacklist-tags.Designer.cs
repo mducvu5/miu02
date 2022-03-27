@@ -8,7 +8,7 @@ using NadekoBot.Services.Database;
 
 namespace NadekoBot.Migrations
 {
-    [DbContext(typeof(NadekoSqliteContext))]
+    [DbContext(typeof(SqliteContext))]
     [Migration("20211015232708_nsfw-blacklist-tags")]
     partial class nsfwblacklisttags
     {

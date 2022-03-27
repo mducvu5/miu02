@@ -10,7 +10,7 @@ using NadekoBot.Services.Database;
 
 namespace NadekoBot.Migrations
 {
-    [DbContext(typeof(NadekoSqliteContext))]
+    [DbContext(typeof(SqliteContext))]
     [Migration("20220102102344_crs-rename-to-expressions-perm-rename")]
     partial class crsrenametoexpressionspermrename
     {

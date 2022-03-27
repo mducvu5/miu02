@@ -8,16 +8,16 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace NadekoBot.Migrations.Postgresql
+namespace NadekoBot.Migrations.PostgreSql
 {
-    [DbContext(typeof(NadekoPostgresContext))]
-    partial class NadekoPostgresContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(PostgreSqlContext))]
+    partial class PostgreSqlContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.2")
+                .HasAnnotation("ProductVersion", "6.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -129,12 +129,12 @@ namespace NadekoBot.Migrations.Postgresql
                     b.Property<DateTime>("LastLevelUp")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2022, 3, 21, 0, 4, 23, 650, DateTimeKind.Utc).AddTicks(9075));
+                        .HasDefaultValueSql("timezone('utc', now())");
 
                     b.Property<DateTime>("LastXpGain")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("datetime('now', '-1 years')");
+                        .HasDefaultValueSql("timezone('utc', now()) - interval '-1 year'");
 
                     b.Property<int>("NotifyOnLevelUp")
                         .ValueGeneratedOnAdd()

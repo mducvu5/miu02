@@ -1,8 +1,6 @@
 #nullable disable
-using LinqToDB;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
 using NadekoBot.Db.Models;
 using NadekoBot.Services.Database.Models;
@@ -21,38 +19,18 @@ public static class SqliteHelper
     }
 }
 
-// public class NadekoContextFactory : IDesignTimeDbContextFactory<NadekoContext>
-// {
-//     public NadekoContext CreateDbContext(string[] args)
-//     {
-//         LogSetup.SetupLogger(-2);
-//         var optionsBuilder = new DbContextOptionsBuilder<NadekoContext>();
-//         var creds = new BotCredsProvider().GetCreds();
-//         NadekoContext ctx;
-//         // if (creds.Db.Type.Equals("mysql", StringComparison.InvariantCultureIgnoreCase))
-//         // {
-//         //     optionsBuilder.UseMySql(creds.Db.ConnectionString, ServerVersion.AutoDetect(creds.Db.ConnectionString));
-//         // }
-//         // else if (creds.Db.Type.Equals("postgres", StringComparison.InvariantCultureIgnoreCase))
-//         // {
-//         //     optionsBuilder.UseNpgsql(creds.Db.ConnectionString);
-//         //     ctx = new PostgresNadekoContext(optionsBuilder.Options);
-//         // }
-//         // else // otherwise use sqlite
-//         // {
-//         // }
-//         
-//         ctx = new NadekoContext(SqliteHelper.FixConnectionString(creds.Db.ConnectionString));
-//         ctx.Database.SetCommandTimeout(0);
-//         return ctx;
-//     }
-// }
-
-public sealed class NadekoSqliteContext : NadekoContext
+public sealed class SqliteContext : NadekoContext
 {
     private readonly string _connectionString;
 
-    public NadekoSqliteContext(string connectionString = "Data Source=data/NadekoBot.db", int commandTimeout = 60)
+    protected override string CurrencyTransactionOtherIdDefaultValue
+        => "NULL";
+    protected override string DiscordUserLastXpGainDefaultValue
+        => "datetime('now', '-1 years')";
+    protected override string DiscordUserLastLevelUpDefaultValue
+        => "datetime('now')";
+
+    public SqliteContext(string connectionString = "Data Source=data/NadekoBot.db", int commandTimeout = 60)
     {
         _connectionString = connectionString;
         Database.SetCommandTimeout(commandTimeout);
@@ -68,11 +46,18 @@ public sealed class NadekoSqliteContext : NadekoContext
     }
 }
 
-public sealed class NadekoPostgresContext : NadekoContext
+public sealed class PostgreSqlContext : NadekoContext
 {
     private readonly string _connStr;
 
-    public NadekoPostgresContext(string connStr = "Host=localhost")
+    protected override string CurrencyTransactionOtherIdDefaultValue
+        => "NULL";
+    protected override string DiscordUserLastXpGainDefaultValue
+        => "timezone('utc', now()) - interval '-1 year'";
+    protected override string DiscordUserLastLevelUpDefaultValue
+        => "timezone('utc', now())";
+
+    public PostgreSqlContext(string connStr = "Host=localhost")
     {
         _connStr = connStr;
     }
@@ -81,12 +66,19 @@ public sealed class NadekoPostgresContext : NadekoContext
         => optionsBuilder.UseNpgsql(_connStr);
 }
 
-public sealed class NadekoMysqlContext : NadekoContext
+public sealed class MysqlContext : NadekoContext
 {
     private readonly string _connStr;
     private readonly string _version;
 
-    public NadekoMysqlContext(string connStr = "Server=localhost", string version = "8.0")
+    protected override string CurrencyTransactionOtherIdDefaultValue
+        => "NULL";
+    protected override string DiscordUserLastXpGainDefaultValue
+        => "UTC_TIMESTAMP() - INTERVAL 1 year";
+    protected override string DiscordUserLastLevelUpDefaultValue
+        => "UTC_TIMESTAMP()";
+
+    public MysqlContext(string connStr = "Server=localhost", string version = "8.0")
     {
         _connStr = connStr;
         _version = version;
@@ -139,6 +131,14 @@ public abstract class NadekoContext : DbContext
 
     public DbSet<Permissionv2> Permissions { get; set; }
 
+    #region Mandatory Provider-Specific Values
+
+    protected abstract string CurrencyTransactionOtherIdDefaultValue { get; }
+    protected abstract string DiscordUserLastXpGainDefaultValue { get; }
+    protected abstract string DiscordUserLastLevelUpDefaultValue { get; }
+    
+    #endregion
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         #region QUOTES
@@ -232,10 +232,10 @@ public abstract class NadekoContext : DbContext
               .HasDefaultValue(XpNotificationLocation.None);
 
             du.Property(x => x.LastXpGain)
-              .HasDefaultValueSql("datetime('now', '-1 years')");
+              .HasDefaultValueSql(DiscordUserLastXpGainDefaultValue);
 
             du.Property(x => x.LastLevelUp)
-              .HasDefaultValue(Sql.CurrentTimestampUtc);
+              .HasDefaultValueSql(DiscordUserLastLevelUpDefaultValue);
 
             du.Property(x => x.TotalXp)
               .HasDefaultValue(0);
@@ -364,7 +364,7 @@ public abstract class NadekoContext : DbContext
              .IsUnique(false);
 
             e.Property(x => x.OtherId)
-             .HasDefaultValueSql("NULL");
+             .HasDefaultValueSql(CurrencyTransactionOtherIdDefaultValue);
 
             e.Property(x => x.Type)
              .IsRequired();

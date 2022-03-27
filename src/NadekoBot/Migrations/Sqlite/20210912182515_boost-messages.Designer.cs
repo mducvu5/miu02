@@ -8,7 +8,7 @@ using NadekoBot.Services.Database;
 
 namespace NadekoBot.Migrations
 {
-    [DbContext(typeof(NadekoSqliteContext))]
+    [DbContext(typeof(SqliteContext))]
     [Migration("20210912182515_boost-messages")]
     partial class boostmessages
     {

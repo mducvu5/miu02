@@ -10,7 +10,7 @@ using NadekoBot.Services.Database;
 
 namespace NadekoBot.Migrations
 {
-    [DbContext(typeof(NadekoSqliteContext))]
+    [DbContext(typeof(SqliteContext))]
     [Migration("20220110105942_filter-settings-cleanup")]
     partial class filtersettingscleanup
     {

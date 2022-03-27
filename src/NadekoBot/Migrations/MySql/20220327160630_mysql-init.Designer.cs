@@ -2,21 +2,23 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NadekoBot.Services.Database;
 
 #nullable disable
 
-namespace NadekoBot.Migrations.MySql
+namespace NadekoBot.Migrations.Mysql
 {
-    [DbContext(typeof(NadekoMysqlContext))]
-    partial class NadekoMysqlContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(MysqlContext))]
+    [Migration("20220327160630_mysql-init")]
+    partial class mysqlinit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.2")
+                .HasAnnotation("ProductVersion", "6.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("NadekoBot.Db.Models.ClubApplicants", b =>
@@ -122,12 +124,12 @@ namespace NadekoBot.Migrations.MySql
                     b.Property<DateTime>("LastLevelUp")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)")
-                        .HasDefaultValue(new DateTime(2022, 3, 21, 0, 19, 3, 449, DateTimeKind.Utc).AddTicks(4545));
+                        .HasDefaultValueSql("UTC_TIMESTAMP()");
 
                     b.Property<DateTime>("LastXpGain")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)")
-                        .HasDefaultValueSql("datetime('now', '-1 years')");
+                        .HasDefaultValueSql("UTC_TIMESTAMP() - INTERVAL 1 year");
 
                     b.Property<int>("NotifyOnLevelUp")
                         .ValueGeneratedOnAdd()

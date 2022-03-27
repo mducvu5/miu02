@@ -10,7 +10,7 @@ using NadekoBot.Services.Database;
 
 namespace NadekoBot.Migrations
 {
-    [DbContext(typeof(NadekoSqliteContext))]
+    [DbContext(typeof(SqliteContext))]
     [Migration("20220125044401_curtrs-rework-discorduser-defaults")]
     partial class curtrsreworkdiscorduserdefaults
     {

@@ -41,11 +41,11 @@ public class DbService
         {
             case "postgresql":
             case "postgres":
-                return new NadekoPostgresContext(connString);
+                return new PostgreSqlContext(connString);
             case "mysql":
-                return new NadekoMysqlContext(connString);
+                return new MysqlContext(connString);
             case "sqlite":
-                return new NadekoSqliteContext(connString);
+                return new SqliteContext(connString);
             default:
                 throw new NotSupportedException($"The database provide type of '{dbType}' is not supported.");
         }
