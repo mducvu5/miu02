@@ -43,9 +43,6 @@ public sealed class Bot
 
         _db = new(_creds);
 
-        if (shardId == 0)
-            _db.Setup();
-
         var messageCacheSize =
 #if GLOBAL_NADEKO
             0;
@@ -286,6 +283,9 @@ public sealed class Bot
 
     public async Task RunAsync()
     {
+        if (ShardId == 0)
+            await _db.SetupAsync();
+        
         var sw = Stopwatch.StartNew();
 
         await LoginAsync(_creds.Token);

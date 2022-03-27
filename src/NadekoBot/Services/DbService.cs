@@ -1,4 +1,5 @@
 #nullable disable
+using LinqToDB.Common;
 using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using NadekoBot.Services.Database;
@@ -7,46 +8,67 @@ namespace NadekoBot.Services;
 
 public class DbService
 {
-    private readonly DbContextOptions<NadekoSqliteContext> _options;
-    private readonly DbContextOptions<NadekoSqliteContext> _migrateOptions;
     private readonly IBotCredentials _creds;
 
+    // these are props because creds can change at runtime
+    private string DbType => _creds.Db.Type.ToLowerInvariant().Trim();
+    private string ConnString => _creds.Db.ConnectionString;
+    
     public DbService(IBotCredentials creds)
     {
         LinqToDBForEFTools.Initialize();
+        Configuration.Linq.DisableQueryCache = true;
+
         _creds = creds;
     }
 
-    public async Task Setup()
+    public async Task SetupAsync()
     {
-        await using var context = new NadekoSqliteContext(_creds.Db.ConnectionString);
-        var migrations = await context.Database.GetPendingMigrationsAsync();
-        if (migrations.Any())
-        {
-            await using var mContext = new NadekoSqliteContext(_creds.Db.ConnectionString, 0);
-            await mContext.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL");
-            await mContext.Database.MigrateAsync();
-            await mContext.SaveChangesAsync();
-        }
+        var dbType = DbType;
+        var connString = ConnString;
 
-        await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL");
-        await context.SaveChangesAsync();
+        await using var context = CreateRawDbContext(dbType, connString);
+        await context.Database.MigrateAsync();
+        
+        // make sure sqlite db is in wal journal mode
+        if(dbType is "sqlite")
+            await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL");
     }
 
-    private NadekoSqliteContext GetDbContextInternal()
+    private static NadekoContext CreateRawDbContext(string dbType, string connString)
     {
-        var dbType = _creds.Db.Type;
-        var connString = _creds.Db.ConnectionString;
-        
-        var context = new NadekoSqliteContext(connString);
-        var conn = context.Database.GetDbConnection();
-        conn.Open();
-        using var com = conn.CreateCommand();
-        com.CommandText = "PRAGMA synchronous=OFF";
-        com.ExecuteNonQuery();
+        switch (dbType)
+        {
+            case "postgresql":
+            case "postgres":
+                return new NadekoPostgresContext(connString);
+            case "mysql":
+                return new NadekoMysqlContext(connString);
+            case "sqlite":
+                return new NadekoSqliteContext(connString);
+            default:
+                throw new NotSupportedException($"The database provide type of '{dbType}' is not supported.");
+        }
+    }
+    
+    private NadekoContext GetDbContextInternal()
+    {
+        var dbType = DbType;
+        var connString = ConnString;
+
+        var context = CreateRawDbContext(dbType, connString);
+        if (dbType is "sqlite")
+        {
+            var conn = context.Database.GetDbConnection();
+            conn.Open();
+            using var com = conn.CreateCommand();
+            com.CommandText = "PRAGMA synchronous=OFF";
+            com.ExecuteNonQuery();
+        }
+
         return context;
     }
 
-    public NadekoSqliteContext GetDbContext()
+    public NadekoContext GetDbContext()
         => GetDbContextInternal();
 }
