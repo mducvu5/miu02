@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace NadekoBot.Migrations.PostgreSql
 {
-    public partial class postgresqlinit : Migration
+    public partial class postgresinit : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -427,7 +427,7 @@ namespace NadekoBot.Migrations.PostgreSql
                     Xp = table.Column<int>(type: "integer", nullable: false),
                     AwardedXp = table.Column<int>(type: "integer", nullable: false),
                     NotifyOnLevelUp = table.Column<int>(type: "integer", nullable: false),
-                    LastLevelUp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValue: new DateTime(2017, 9, 21, 20, 53, 13, 307, DateTimeKind.Local)),
+                    LastLevelUp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "timezone('utc', now())"),
                     DateAdded = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>

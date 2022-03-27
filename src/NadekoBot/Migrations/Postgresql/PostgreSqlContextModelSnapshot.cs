@@ -2009,7 +2009,7 @@ namespace NadekoBot.Migrations.PostgreSql
                     b.Property<DateTime>("LastLevelUp")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasDefaultValue(new DateTime(2017, 9, 21, 20, 53, 13, 307, DateTimeKind.Local));
+                        .HasDefaultValueSql("timezone('utc', now())");
 
                     b.Property<int>("NotifyOnLevelUp")
                         .HasColumnType("integer");

@@ -485,7 +485,7 @@ namespace NadekoBot.Migrations.Mysql
                     Xp = table.Column<int>(type: "int", nullable: false),
                     AwardedXp = table.Column<int>(type: "int", nullable: false),
                     NotifyOnLevelUp = table.Column<int>(type: "int", nullable: false),
-                    LastLevelUp = table.Column<DateTime>(type: "datetime(6)", nullable: false, defaultValue: new DateTime(2017, 9, 21, 20, 53, 13, 307, DateTimeKind.Local)),
+                    LastLevelUp = table.Column<DateTime>(type: "datetime(6)", nullable: false, defaultValueSql: "(UTC_TIMESTAMP)"),
                     DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)
                 },
                 constraints: table =>
@@ -1544,8 +1544,8 @@ namespace NadekoBot.Migrations.Mysql
                     ClubId = table.Column<int>(type: "int", nullable: true),
                     IsClubAdmin = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
                     TotalXp = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
-                    LastLevelUp = table.Column<DateTime>(type: "datetime(6)", nullable: false, defaultValueSql: "UTC_TIMESTAMP()"),
-                    LastXpGain = table.Column<DateTime>(type: "datetime(6)", nullable: false, defaultValueSql: "UTC_TIMESTAMP() - INTERVAL 1 year"),
+                    LastLevelUp = table.Column<DateTime>(type: "datetime(6)", nullable: false, defaultValueSql: "(UTC_TIMESTAMP)"),
+                    LastXpGain = table.Column<DateTime>(type: "datetime(6)", nullable: false, defaultValueSql: "(UTC_TIMESTAMP - INTERVAL 1 year)"),
                     NotifyOnLevelUp = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
                     CurrencyAmount = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
                     DateAdded = table.Column<DateTime>(type: "datetime(6)", nullable: true)

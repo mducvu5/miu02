@@ -122,12 +122,12 @@ namespace NadekoBot.Migrations.Mysql
                     b.Property<DateTime>("LastLevelUp")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)")
-                        .HasDefaultValueSql("UTC_TIMESTAMP()");
+                        .HasDefaultValueSql("(UTC_TIMESTAMP)");
 
                     b.Property<DateTime>("LastXpGain")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)")
-                        .HasDefaultValueSql("UTC_TIMESTAMP() - INTERVAL 1 year");
+                        .HasDefaultValueSql("(UTC_TIMESTAMP - INTERVAL 1 year)");
 
                     b.Property<int>("NotifyOnLevelUp")
                         .ValueGeneratedOnAdd()
@@ -1886,7 +1886,7 @@ namespace NadekoBot.Migrations.Mysql
                     b.Property<DateTime>("LastLevelUp")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)")
-                        .HasDefaultValue(new DateTime(2017, 9, 21, 20, 53, 13, 307, DateTimeKind.Local));
+                        .HasDefaultValueSql("(UTC_TIMESTAMP)");
 
                     b.Property<int>("NotifyOnLevelUp")
                         .HasColumnType("int");
