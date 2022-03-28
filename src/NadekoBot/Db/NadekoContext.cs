@@ -1,5 +1,4 @@
 #nullable disable
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NadekoBot.Db.Models;
@@ -8,91 +7,6 @@ using NadekoBot.Services.Database.Models;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace NadekoBot.Services.Database;
-
-public static class SqliteHelper
-{
-    public static string FixConnectionString(string connStr)
-    {
-        var builder = new SqliteConnectionStringBuilder(connStr);
-        builder.DataSource = Path.Combine(AppContext.BaseDirectory, builder.DataSource);
-        return builder.ToString();
-    }
-}
-
-public sealed class SqliteContext : NadekoContext
-{
-    private readonly string _connectionString;
-
-    protected override string CurrencyTransactionOtherIdDefaultValue
-        => "NULL";
-    protected override string DiscordUserLastXpGainDefaultValue
-        => "datetime('now', '-1 years')";
-    protected override string LastLevelUpDefaultValue
-        => "datetime('now')";
-
-    public SqliteContext(string connectionString = "Data Source=data/NadekoBot.db", int commandTimeout = 60)
-    {
-        _connectionString = connectionString;
-        Database.SetCommandTimeout(commandTimeout);
-    }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-        var connStrBuilder = new SqliteConnectionStringBuilder(_connectionString);
-        connStrBuilder.DataSource = Path.Combine(AppContext.BaseDirectory, connStrBuilder.DataSource);
-        var connString = connStrBuilder.ToString();
-        optionsBuilder.UseSqlite(connString);
-    }
-}
-
-public sealed class PostgreSqlContext : NadekoContext
-{
-    private readonly string _connStr;
-
-    protected override string CurrencyTransactionOtherIdDefaultValue
-        => "NULL";
-    protected override string DiscordUserLastXpGainDefaultValue
-        => "timezone('utc', now()) - interval '-1 year'";
-    protected override string LastLevelUpDefaultValue
-        => "timezone('utc', now())";
-
-    public PostgreSqlContext(string connStr = "Host=localhost")
-    {
-        _connStr = connStr;
-    }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-        optionsBuilder.UseNpgsql(_connStr);
-    }
-}
-
-public sealed class MysqlContext : NadekoContext
-{
-    private readonly string _connStr;
-    private readonly string _version;
-
-    protected override string CurrencyTransactionOtherIdDefaultValue
-        => "NULL";
-    protected override string DiscordUserLastXpGainDefaultValue
-        => "(UTC_TIMESTAMP - INTERVAL 1 year)";
-    protected override string LastLevelUpDefaultValue
-        => "(UTC_TIMESTAMP)";
-
-    public MysqlContext(string connStr = "Server=localhost", string version = "8.0")
-    {
-        _connStr = connStr;
-        _version = version;
-    }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-        optionsBuilder.UseMySql(_connStr, ServerVersion.Parse(_version));
-    }
-}
 
 public abstract class NadekoContext : DbContext
 {

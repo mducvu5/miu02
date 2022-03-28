@@ -15,7 +15,7 @@ namespace NadekoBot.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.2");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.3");
 
             modelBuilder.Entity("NadekoBot.Db.Models.ClubApplicants", b =>
                 {
@@ -29,7 +29,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ClubApplicants", (string)null);
+                    b.ToTable("ClubApplicants");
                 });
 
             modelBuilder.Entity("NadekoBot.Db.Models.ClubBans", b =>
@@ -44,7 +44,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ClubBans", (string)null);
+                    b.ToTable("ClubBans");
                 });
 
             modelBuilder.Entity("NadekoBot.Db.Models.ClubInfo", b =>
@@ -86,7 +86,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("OwnerId")
                         .IsUnique();
 
-                    b.ToTable("Clubs", (string)null);
+                    b.ToTable("Clubs");
                 });
 
             modelBuilder.Entity("NadekoBot.Db.Models.DiscordUser", b =>
@@ -155,7 +155,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DiscordUser", (string)null);
+                    b.ToTable("DiscordUser");
                 });
 
             modelBuilder.Entity("NadekoBot.Db.Models.FollowedStream", b =>
@@ -189,7 +189,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("FollowedStream", (string)null);
+                    b.ToTable("FollowedStream");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.AntiAltSetting", b =>
@@ -218,7 +218,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildConfigId")
                         .IsUnique();
 
-                    b.ToTable("AntiAltSetting", (string)null);
+                    b.ToTable("AntiAltSetting");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.AntiRaidSetting", b =>
@@ -250,7 +250,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildConfigId")
                         .IsUnique();
 
-                    b.ToTable("AntiRaidSetting", (string)null);
+                    b.ToTable("AntiRaidSetting");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.AntiSpamIgnore", b =>
@@ -272,7 +272,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("AntiSpamSettingId");
 
-                    b.ToTable("AntiSpamIgnore", (string)null);
+                    b.ToTable("AntiSpamIgnore");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.AntiSpamSetting", b =>
@@ -304,7 +304,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildConfigId")
                         .IsUnique();
 
-                    b.ToTable("AntiSpamSetting", (string)null);
+                    b.ToTable("AntiSpamSetting");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.AutoCommand", b =>
@@ -342,7 +342,7 @@ namespace NadekoBot.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AutoCommands", (string)null);
+                    b.ToTable("AutoCommands");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.AutoTranslateChannel", b =>
@@ -370,7 +370,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildId");
 
-                    b.ToTable("AutoTranslateChannels", (string)null);
+                    b.ToTable("AutoTranslateChannels");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.AutoTranslateUser", b =>
@@ -398,7 +398,7 @@ namespace NadekoBot.Migrations
 
                     b.HasAlternateKey("ChannelId", "UserId");
 
-                    b.ToTable("AutoTranslateUsers", (string)null);
+                    b.ToTable("AutoTranslateUsers");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.BanTemplate", b =>
@@ -421,7 +421,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildId")
                         .IsUnique();
 
-                    b.ToTable("BanTemplates", (string)null);
+                    b.ToTable("BanTemplates");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.BlacklistEntry", b =>
@@ -441,7 +441,7 @@ namespace NadekoBot.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Blacklist", (string)null);
+                    b.ToTable("Blacklist");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.CommandAlias", b =>
@@ -466,7 +466,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("CommandAlias", (string)null);
+                    b.ToTable("CommandAlias");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.CommandCooldown", b =>
@@ -491,7 +491,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("CommandCooldown", (string)null);
+                    b.ToTable("CommandCooldown");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.CurrencyTransaction", b =>
@@ -529,7 +529,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CurrencyTransactions", (string)null);
+                    b.ToTable("CurrencyTransactions");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.DelMsgOnCmdChannel", b =>
@@ -554,7 +554,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("DelMsgOnCmdChannel", (string)null);
+                    b.ToTable("DelMsgOnCmdChannel");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.DiscordPermOverride", b =>
@@ -580,7 +580,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildId", "Command")
                         .IsUnique();
 
-                    b.ToTable("DiscordPermOverrides", (string)null);
+                    b.ToTable("DiscordPermOverrides");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.ExcludedItem", b =>
@@ -605,7 +605,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("XpSettingsId");
 
-                    b.ToTable("ExcludedItem", (string)null);
+                    b.ToTable("ExcludedItem");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.FeedSub", b =>
@@ -631,7 +631,7 @@ namespace NadekoBot.Migrations
 
                     b.HasAlternateKey("GuildConfigId", "Url");
 
-                    b.ToTable("FeedSub", (string)null);
+                    b.ToTable("FeedSub");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.FilterChannelId", b =>
@@ -653,7 +653,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("FilterChannelId", (string)null);
+                    b.ToTable("FilterChannelId");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.FilteredWord", b =>
@@ -675,7 +675,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("FilteredWord", (string)null);
+                    b.ToTable("FilteredWord");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.FilterLinksChannelId", b =>
@@ -697,7 +697,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("FilterLinksChannelId", (string)null);
+                    b.ToTable("FilterLinksChannelId");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.FilterWordsChannelId", b =>
@@ -719,7 +719,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("FilterWordsChannelId", (string)null);
+                    b.ToTable("FilterWordsChannelId");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.GCChannelId", b =>
@@ -741,7 +741,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("GCChannelId", (string)null);
+                    b.ToTable("GCChannelId");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.GroupName", b =>
@@ -767,7 +767,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildConfigId", "Number")
                         .IsUnique();
 
-                    b.ToTable("GroupName", (string)null);
+                    b.ToTable("GroupName");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.GuildConfig", b =>
@@ -891,7 +891,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("WarnExpireHours");
 
-                    b.ToTable("GuildConfigs", (string)null);
+                    b.ToTable("GuildConfigs");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.IgnoredLogItem", b =>
@@ -917,7 +917,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("LogSettingId", "LogItemId", "ItemType")
                         .IsUnique();
 
-                    b.ToTable("IgnoredLogChannels", (string)null);
+                    b.ToTable("IgnoredLogChannels");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.IgnoredVoicePresenceChannel", b =>
@@ -939,7 +939,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("LogSettingId");
 
-                    b.ToTable("IgnoredVoicePresenceCHannels", (string)null);
+                    b.ToTable("IgnoredVoicePresenceCHannels");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.ImageOnlyChannel", b =>
@@ -962,7 +962,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("ChannelId")
                         .IsUnique();
 
-                    b.ToTable("ImageOnlyChannels", (string)null);
+                    b.ToTable("ImageOnlyChannels");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.LogSetting", b =>
@@ -1027,7 +1027,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildId")
                         .IsUnique();
 
-                    b.ToTable("LogSettings", (string)null);
+                    b.ToTable("LogSettings");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.MusicPlayerSettings", b =>
@@ -1064,7 +1064,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildId")
                         .IsUnique();
 
-                    b.ToTable("MusicPlayerSettings", (string)null);
+                    b.ToTable("MusicPlayerSettings");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.MusicPlaylist", b =>
@@ -1087,7 +1087,7 @@ namespace NadekoBot.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("MusicPlaylists", (string)null);
+                    b.ToTable("MusicPlaylists");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.MutedUserId", b =>
@@ -1109,7 +1109,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("MutedUserId", (string)null);
+                    b.ToTable("MutedUserId");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.NadekoExpression", b =>
@@ -1147,7 +1147,7 @@ namespace NadekoBot.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Expressions", (string)null);
+                    b.ToTable("Expressions");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.NsfwBlacklistedTag", b =>
@@ -1169,7 +1169,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildId");
 
-                    b.ToTable("NsfwBlacklistedTags", (string)null);
+                    b.ToTable("NsfwBlacklistedTags");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.Permissionv2", b =>
@@ -1209,7 +1209,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("Permissions", (string)null);
+                    b.ToTable("Permissions");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.PlantedCurrency", b =>
@@ -1246,7 +1246,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("MessageId")
                         .IsUnique();
 
-                    b.ToTable("PlantedCurrency", (string)null);
+                    b.ToTable("PlantedCurrency");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.PlaylistSong", b =>
@@ -1280,7 +1280,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("MusicPlaylistId");
 
-                    b.ToTable("PlaylistSong", (string)null);
+                    b.ToTable("PlaylistSong");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.Poll", b =>
@@ -1306,7 +1306,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildId")
                         .IsUnique();
 
-                    b.ToTable("Poll", (string)null);
+                    b.ToTable("Poll");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.PollAnswer", b =>
@@ -1331,7 +1331,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("PollId");
 
-                    b.ToTable("PollAnswer", (string)null);
+                    b.ToTable("PollAnswer");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.PollVote", b =>
@@ -1356,7 +1356,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("PollId");
 
-                    b.ToTable("PollVote", (string)null);
+                    b.ToTable("PollVote");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.Quote", b =>
@@ -1392,7 +1392,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("Keyword");
 
-                    b.ToTable("Quotes", (string)null);
+                    b.ToTable("Quotes");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.ReactionRole", b =>
@@ -1417,7 +1417,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("ReactionRoleMessageId");
 
-                    b.ToTable("ReactionRole", (string)null);
+                    b.ToTable("ReactionRole");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.ReactionRoleMessage", b =>
@@ -1448,7 +1448,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("ReactionRoleMessage", (string)null);
+                    b.ToTable("ReactionRoleMessage");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.Reminder", b =>
@@ -1482,7 +1482,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("When");
 
-                    b.ToTable("Reminders", (string)null);
+                    b.ToTable("Reminders");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.Repeater", b =>
@@ -1517,7 +1517,7 @@ namespace NadekoBot.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Repeaters", (string)null);
+                    b.ToTable("Repeaters");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.RewardedUser", b =>
@@ -1546,7 +1546,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("PatreonUserId")
                         .IsUnique();
 
-                    b.ToTable("RewardedUsers", (string)null);
+                    b.ToTable("RewardedUsers");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.RotatingPlayingStatus", b =>
@@ -1566,7 +1566,7 @@ namespace NadekoBot.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RotatingStatus", (string)null);
+                    b.ToTable("RotatingStatus");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.SelfAssignedRole", b =>
@@ -1597,7 +1597,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildId", "RoleId")
                         .IsUnique();
 
-                    b.ToTable("SelfAssignableRoles", (string)null);
+                    b.ToTable("SelfAssignableRoles");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.ShopEntry", b =>
@@ -1637,7 +1637,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("ShopEntry", (string)null);
+                    b.ToTable("ShopEntry");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.ShopEntryItem", b =>
@@ -1659,7 +1659,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("ShopEntryId");
 
-                    b.ToTable("ShopEntryItem", (string)null);
+                    b.ToTable("ShopEntryItem");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.SlowmodeIgnoredRole", b =>
@@ -1681,7 +1681,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("SlowmodeIgnoredRole", (string)null);
+                    b.ToTable("SlowmodeIgnoredRole");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.SlowmodeIgnoredUser", b =>
@@ -1703,7 +1703,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("SlowmodeIgnoredUser", (string)null);
+                    b.ToTable("SlowmodeIgnoredUser");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.StreamRoleBlacklistedUser", b =>
@@ -1728,7 +1728,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("StreamRoleSettingsId");
 
-                    b.ToTable("StreamRoleBlacklistedUser", (string)null);
+                    b.ToTable("StreamRoleBlacklistedUser");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.StreamRoleSettings", b =>
@@ -1760,7 +1760,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildConfigId")
                         .IsUnique();
 
-                    b.ToTable("StreamRoleSettings", (string)null);
+                    b.ToTable("StreamRoleSettings");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.StreamRoleWhitelistedUser", b =>
@@ -1785,7 +1785,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("StreamRoleSettingsId");
 
-                    b.ToTable("StreamRoleWhitelistedUser", (string)null);
+                    b.ToTable("StreamRoleWhitelistedUser");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.UnbanTimer", b =>
@@ -1810,7 +1810,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("UnbanTimer", (string)null);
+                    b.ToTable("UnbanTimer");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.UnmuteTimer", b =>
@@ -1835,7 +1835,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("UnmuteTimer", (string)null);
+                    b.ToTable("UnmuteTimer");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.UnroleTimer", b =>
@@ -1863,7 +1863,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("UnroleTimer", (string)null);
+                    b.ToTable("UnroleTimer");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.UserXpStats", b =>
@@ -1884,7 +1884,7 @@ namespace NadekoBot.Migrations
                     b.Property<DateTime>("LastLevelUp")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
-                        .HasDefaultValue(new DateTime(2017, 9, 21, 20, 53, 13, 307, DateTimeKind.Local));
+                        .HasDefaultValueSql("datetime('now')");
 
                     b.Property<int>("NotifyOnLevelUp")
                         .HasColumnType("INTEGER");
@@ -1908,7 +1908,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("UserId", "GuildId")
                         .IsUnique();
 
-                    b.ToTable("UserXpStats", (string)null);
+                    b.ToTable("UserXpStats");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.VcRoleInfo", b =>
@@ -1933,7 +1933,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("VcRoleInfo", (string)null);
+                    b.ToTable("VcRoleInfo");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.WaifuInfo", b =>
@@ -1968,7 +1968,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("WaifuId")
                         .IsUnique();
 
-                    b.ToTable("WaifuInfo", (string)null);
+                    b.ToTable("WaifuInfo");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.WaifuItem", b =>
@@ -1993,7 +1993,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("WaifuInfoId");
 
-                    b.ToTable("WaifuItem", (string)null);
+                    b.ToTable("WaifuItem");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.WaifuUpdate", b =>
@@ -2025,7 +2025,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("WaifuUpdates", (string)null);
+                    b.ToTable("WaifuUpdates");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.Warning", b =>
@@ -2068,7 +2068,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Warnings", (string)null);
+                    b.ToTable("Warnings");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.WarningPunishment", b =>
@@ -2099,7 +2099,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("GuildConfigId");
 
-                    b.ToTable("WarningPunishment", (string)null);
+                    b.ToTable("WarningPunishment");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.XpCurrencyReward", b =>
@@ -2124,7 +2124,7 @@ namespace NadekoBot.Migrations
 
                     b.HasIndex("XpSettingsId");
 
-                    b.ToTable("XpCurrencyReward", (string)null);
+                    b.ToTable("XpCurrencyReward");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.XpRoleReward", b =>
@@ -2153,7 +2153,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("XpSettingsId", "Level")
                         .IsUnique();
 
-                    b.ToTable("XpRoleReward", (string)null);
+                    b.ToTable("XpRoleReward");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.XpSettings", b =>
@@ -2176,7 +2176,7 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildConfigId")
                         .IsUnique();
 
-                    b.ToTable("XpSettings", (string)null);
+                    b.ToTable("XpSettings");
                 });
 
             modelBuilder.Entity("NadekoBot.Db.Models.ClubApplicants", b =>
@@ -2561,9 +2561,11 @@ namespace NadekoBot.Migrations
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.WaifuItem", b =>
                 {
-                    b.HasOne("NadekoBot.Services.Database.Models.WaifuInfo", null)
+                    b.HasOne("NadekoBot.Services.Database.Models.WaifuInfo", "WaifuInfo")
                         .WithMany("Items")
                         .HasForeignKey("WaifuInfoId");
+
+                    b.Navigation("WaifuInfo");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.WaifuUpdate", b =>
